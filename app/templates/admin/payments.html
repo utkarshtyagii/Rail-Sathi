@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% from 'admin/_components.html' import heading, metric, notice, status %}
+{% block title %}Payments & refunds · Rail Sathi admin{% endblock %}
+{% block content %}<div class="admin-content">
+{{ heading('Payments & refunds', 'Review payment attempts and receipt references stored by the app.', 'PAYMENT OPERATIONS') }}
+{{ notice('Refund initiation is not connected. This page reports recorded payment attempts only; it does not mark refunds or settlements as complete.') }}
+<section class="admin-metrics admin-metrics-three">{{ metric('Recorded paid total', paid_total|inr, 'Based on the latest 300 attempts') }}{{ metric('Payment attempts', attempts|length, 'Latest records') }}{{ metric('Gateway', 'Connected' if payments_enabled else 'Demo mode', 'Payment provider configuration', 'green' if payments_enabled else '') }}</section>
+<section class="admin-panel"><div class="admin-panel-heading"><div><h2>Payment history</h2><p>Newest attempts first.</p></div></div><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Receipt</th><th>Booking</th><th>Passenger</th><th>Station</th><th>Created</th><th>Amount</th><th>Status</th><th>Provider ref</th></tr></thead><tbody>{% for attempt in attempts %}<tr><td><strong>{{ attempt.receipt }}</strong></td><td>{{ attempt.booking.public_id }}</td><td>{{ attempt.booking.passenger.name }}</td><td>{{ attempt.booking.station.code }}</td><td>{{ (attempt.created_at|india_utc).strftime('%d %b %Y · %H:%M') }}</td><td>{{ (attempt.amount_paise / 100)|inr }}</td><td>{{ status(attempt.status) }}</td><td>{{ attempt.provider_payment_id or attempt.provider_order_id or '—' }}</td></tr>{% else %}<tr><td colspan="8" class="admin-empty">No payment attempts are recorded.</td></tr>{% endfor %}</tbody></table></div></section>
+</div>{% endblock %}

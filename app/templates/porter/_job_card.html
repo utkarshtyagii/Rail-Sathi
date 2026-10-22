@@ -1,0 +1,54 @@
+{% macro porter_job_card(booking, compact=false) %}
+<article class="passenger-next-booking porter-job-card {{ 'porter-job-card-compact' if compact else '' }}" id="job-{{ booking.id }}">
+  <div class="porter-job-card-heading">
+    <span class="porter-job-reference">Assignment {{ booking.public_id }}</span>
+    <div class="porter-job-header-actions">
+      <span class="passenger-status status-{{ booking.status }}">{{ booking.status.replace('_', ' ')|title }}</span>
+      {% if booking.status == 'requested' %}
+      <form method="post" action="{{ url_for('bookings.update_status', booking_id=booking.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="status" value="accepted"><button class="passenger-primary-button" type="submit">Accept request <span aria-hidden="true">→</span></button></form>
+      {% elif booking.status == 'assigned' %}
+      <form method="post" action="{{ url_for('bookings.update_status', booking_id=booking.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="status" value="accepted"><button class="passenger-primary-button" type="submit">Accept job <span aria-hidden="true">→</span></button></form>
+      <form method="post" action="{{ url_for('bookings.update_status', booking_id=booking.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="status" value="declined"><button class="porter-decline-button" type="submit">Decline</button></form>
+      {% else %}
+        {% set next_status = {'accepted': 'en_route', 'en_route': 'arrived', 'arrived': 'in_progress', 'in_progress': 'completed'}.get(booking.status) %}
+        {% if next_status %}
+        <form class="porter-job-progress-form" method="post" action="{{ url_for('bookings.update_status', booking_id=booking.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="status" value="{{ next_status }}">
+          {% if booking.status in ['arrived', 'in_progress'] %}<label class="sr-only" for="handoff-otp-{{ booking.id }}">Passenger confirmation code</label><input class="porter-handoff-otp-input" id="handoff-otp-{{ booking.id }}" name="handoff_otp" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="Passenger OTP" required>{% endif %}
+          <button class="passenger-primary-button" type="submit">{{ 'Mark in progress' if booking.status == 'arrived' else 'Complete job' if booking.status == 'in_progress' else 'Mark ' ~ next_status.replace('_', ' ') }} <span aria-hidden="true">→</span></button>
+        </form>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+  <div class="passenger-booking-route">
+    <span class="passenger-station-code">{{ booking.station.code }}</span>
+    <div><h3>{{ booking.station.name }}</h3><p>{{ booking.service.name }}{% if booking.train_number %} · Train {{ booking.train_number }}{% endif %}</p></div>
+  </div>
+  <div class="porter-passenger-line">
+    <span class="porter-passenger-avatar" aria-hidden="true">{{ booking.passenger.name[:2]|upper }}</span>
+    <span class="porter-passenger-name"><small>Passenger</small><strong>{{ booking.passenger.name }}</strong>{% if booking.train_number %}<small>Train {{ booking.train_number }}</small>{% endif %}</span>
+    {% if booking.passenger_phone %}<a class="porter-call-button" href="tel:{{ booking.passenger_phone }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-3 2a15 15 0 0 0 5 5l2-3 5 2v4c0 1-1 2-2 2C10 20 4 14 3 6c0-1 1-2 2-2Z"/></svg>Call</a>{% endif %}
+  </div>
+  <div class="porter-waypoints" aria-label="Pickup and drop-off points">
+    <div><span class="porter-waypoint-icon is-pickup" aria-hidden="true">⌖</span><span><small>PICKUP</small><strong>{{ booking.pickup }}{% if booking.platform %}, Platform {{ booking.platform }}{% endif %}{% if booking.coach %}, Coach {{ booking.coach }}{% endif %}</strong></span></div>
+    <div><span class="porter-waypoint-icon is-dropoff" aria-hidden="true">↗</span><span><small>DROP-OFF</small><strong>{{ booking.destination }}</strong></span></div>
+  </div>
+  <div class="passenger-booking-meta">
+    <span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 10h16"/></svg>{{ (booking.service_at|india_local).strftime('%d %b %Y') }}</span>
+    <span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>{{ (booking.service_at|india_local).strftime('%I:%M %p') }}</span>
+    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10l2 3v12l-2 3H7l-2-3V6l2-3Z"/><path d="M8 7h8v6H8z"/></svg>{{ booking.bags }} bag{{ '' if booking.bags == 1 else 's' }}</span>
+    {% if booking.train_number %}<span>Train {{ booking.train_number }}</span>{% endif %}
+    {% if booking.platform %}<span>Platform {{ booking.platform }}</span>{% endif %}
+  </div>
+  {% if booking.instructions %}<p class="porter-job-instructions"><strong>Passenger note</strong>{{ booking.instructions }}</p>{% endif %}
+  {% if booking.status in ['assigned', 'accepted', 'en_route', 'arrived', 'in_progress'] %}
+    {% set tracking_role = 'porter' %}
+    {% include '_booking_tracking.html' %}
+  {% endif %}
+  <div class="porter-job-footer">
+    {% if not compact %}<details class="passenger-history"><summary>Status history</summary><ol>{% for event in booking.history %}<li><strong>{{ event.status.replace('_', ' ')|title }}</strong><time>{{ (event.created_at|india_utc).strftime('%d %b, %I:%M %p') }}</time></li>{% endfor %}</ol></details>{% endif %}
+  </div>
+</article>
+{% endmacro %}

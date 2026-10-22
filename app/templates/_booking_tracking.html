@@ -1,0 +1,52 @@
+<section
+  class="booking-tracking-card"
+  data-booking-tracking
+  data-booking-id="{{ booking.id }}"
+  data-csrf-token="{{ csrf_token() }}"
+  data-role="{{ tracking_role }}"
+  data-booking-status="{{ booking.status }}"
+  data-stale-after-seconds="{{ config.get('LOCATION_STALE_AFTER_SECONDS', 30) }}"
+  data-update-interval-seconds="{{ config.get('LOCATION_UPDATE_MIN_INTERVAL_SECONDS', 3) }}"
+  data-pickup-label="{{ booking.pickup }}"
+  data-destination-label="{{ booking.destination }}"
+  data-pickup-latitude="{{ booking.pickup_latitude if booking.pickup_latitude is not none else '' }}"
+  data-pickup-longitude="{{ booking.pickup_longitude if booking.pickup_longitude is not none else '' }}"
+  data-destination-latitude="{{ booking.destination_latitude if booking.destination_latitude is not none else '' }}"
+  data-destination-longitude="{{ booking.destination_longitude if booking.destination_longitude is not none else '' }}"
+>
+  <div class="booking-tracking-heading">
+    <div>
+      <span class="passenger-eyebrow">BOOKING TRACKING</span>
+      <h3>Journey tracking</h3>
+    </div>
+    <div class="tracking-header-actions">
+      <span class="tracking-connection" data-connection-status role="status" aria-live="polite">Connecting</span>
+      <button class="passenger-primary-button tracking-share-button" type="button" data-start-sharing>
+        {{ 'Start sharing location' if tracking_role == 'porter' else 'Share my location' }}
+      </button>
+      <button class="passenger-inline-button tracking-stop-button" type="button" data-stop-sharing hidden>Stop sharing</button>
+    </div>
+  </div>
+  <p class="tracking-pickup"><strong>Pickup point</strong><span>{{ booking.pickup }}{% if booking.platform %} · Platform {{ booking.platform }}{% endif %}{% if booking.coach %} · Coach {{ booking.coach }}{% endif %}</span><small>{{ 'Pickup map pin saved' if booking.pickup_latitude is not none and booking.pickup_longitude is not none else 'No pickup GPS pin saved; pickup is shown as text only.' }}</small></p>
+  <p class="tracking-pickup"><strong>Destination</strong><span>{{ booking.destination }}</span><small>{{ 'Destination map pin saved' if booking.destination_latitude is not none and booking.destination_longitude is not none else 'Destination is shown as text; no destination map pin is saved.' }}</small></p>
+  <div class="tracking-map-frame">
+    <div class="tracking-map" data-tracking-map role="region" aria-label="Map for booking {{ booking.public_id }}"></div>
+    <p class="tracking-map-empty" data-tracking-map-empty>Loading Google Map…</p>
+  </div>
+  <div class="tracking-participants" aria-live="polite">
+    <div><span class="tracking-dot is-passenger" aria-hidden="true"></span><span><strong>Passenger</strong><small data-participant-state="passenger">Waiting for location</small><small data-participant-detail="passenger"></small></span></div>
+    <div><span class="tracking-dot is-porter" aria-hidden="true"></span><span><strong>Porter</strong><small data-participant-state="porter">Waiting for location</small><small data-participant-detail="porter"></small></span></div>
+  </div>
+  <div class="tracking-distance" aria-live="polite">
+    <span>Passenger–porter distance</span>
+    <strong data-tracking-distance>Waiting for location</strong>
+    <small>Straight-line distance; this is not a walking route distance.</small>
+  </div>
+  <div class="tracking-controls">
+    <span data-tracking-message role="status" aria-live="polite">Location appears here only after a participant grants browser permission.</span>
+    <details class="tracking-permission-help" data-permission-help hidden>
+      <summary>How to allow location in your browser</summary>
+      <p>Open the site controls beside the address bar, set Location to Allow, then reload this page. The browser controls this permission; Rail Sathi cannot grant it for you. Sharing may pause when this tab is backgrounded, your device sleeps, or the browser closes.</p>
+    </details>
+  </div>
+</section>

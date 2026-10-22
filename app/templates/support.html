@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Support — Rail Sathi{% endblock %}
+
+{% block content %}
+{% if current_user.is_authenticated and current_user.role in ['passenger', 'porter'] %}
+<div class="passenger-page-content">
+  <header class="passenger-page-heading"><div><h1>Support</h1><p>{% if current_user.role == 'porter' %}Get help with assignments, verification, or account access.{% else %}Get help with bookings, payments, or account access.{% endif %}</p></div><a class="passenger-primary-button" href="#new-ticket">Start new ticket</a></header>
+  <div class="passenger-support-grid">
+    <section class="passenger-panel passenger-support-intro"><span class="passenger-support-symbol" aria-hidden="true">?</span><h2>{{ 'Assignment help' if current_user.role == 'porter' else 'Booking help' }}</h2><p>{% if current_user.role == 'porter' %}Ask about an assigned job, its service details, or a status update.{% else %}Send a request to the Rail Sathi staff team. Include your booking reference if you have one.{% endif %}</p><a class="passenger-panel-link" href="#new-ticket">Contact support <span aria-hidden="true">→</span></a></section>
+    <section class="passenger-panel passenger-support-intro"><span class="passenger-support-symbol" aria-hidden="true">i</span><h2>{{ 'Profile and verification' if current_user.role == 'porter' else 'Help us resolve it' }}</h2><p>{% if current_user.role == 'porter' %}For a profile or verification issue, include your work station and contact details.{% else %}For a journey issue, share the station, train, and meeting point details in your message.{% endif %}</p><a class="passenger-panel-link" href="#new-ticket">Write a message <span aria-hidden="true">→</span></a></section>
+  </div>
+  <section class="passenger-panel passenger-support-form-panel" id="new-ticket">
+    <div class="passenger-panel-heading"><div><span class="passenger-eyebrow">CONTACT RAIL SATHI</span><h2>Send a support request</h2></div></div>
+    <form method="post" class="form-stack passenger-support-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-row">
+        <label for="support-name">Your name<input id="support-name" name="name" autocomplete="name" value="{{ current_user.name }}" maxlength="120" required></label>
+        <label for="support-email">Email address<input id="support-email" name="email" type="email" autocomplete="email" value="{{ current_user.email }}" maxlength="255" required></label>
+      </div>
+      <label for="booking-reference">Booking reference <small>Optional</small><input id="booking-reference" name="booking_reference" placeholder="For example, RS123ABC" maxlength="16"></label>
+      <label for="support-message">How can we help?<textarea id="support-message" name="message" rows="5" minlength="10" maxlength="1500" required></textarea></label>
+      <button class="passenger-primary-button" type="submit">Send request <span aria-hidden="true">→</span></button>
+    </form>
+    <p class="passenger-panel-copy passenger-support-note">Requests are added to the Rail Sathi staff inbox. Email replies are not automated yet.</p>
+  </section>
+  {% if support_requests %}
+  <section class="passenger-panel passenger-ticket-panel">
+    <div class="passenger-panel-heading"><h2>Recent tickets</h2><span class="passenger-panel-copy">{{ support_requests|length }} recent</span></div>
+    <div class="passenger-ticket-list">{% for ticket in support_requests %}<article><span class="passenger-ticket-id">TKT-{{ '%04d'|format(ticket.id) }}</span><div><strong>{{ ticket.booking_reference or 'Support request' }}</strong><small>{{ (ticket.created_at|india_utc).strftime('%d %b %Y') }}</small></div><span class="passenger-status {{ 'status-completed' if ticket.status == 'resolved' else 'status-requested' }}">{{ ticket.status|title }}</span></article>{% endfor %}</div>
+  </section>
+  {% endif %}
+</div>
+{% else %}
+<section class="auth-wrap support-wrap">
+  <div class="auth-card support-card">
+    <div class="eyebrow">WE’RE HERE TO HELP</div>
+    <h1>Send a support request.</h1>
+    <p>Tell us what happened. Your request will be added to the Rail Sathi staff inbox.</p>
+
+    <form method="post" class="form-stack support-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="support-name">Your name
+        <input id="support-name" name="name" autocomplete="name" value="{{ current_user.name if current_user.is_authenticated else '' }}" maxlength="120" required>
+      </label>
+      <label for="support-email">Email address
+        <input id="support-email" name="email" type="email" autocomplete="email" value="{{ current_user.email if current_user.is_authenticated else '' }}" maxlength="255" required>
+      </label>
+      <label for="booking-reference">Booking reference <small>Optional</small>
+        <input id="booking-reference" name="booking_reference" placeholder="For example, RS123ABC" maxlength="16">
+      </label>
+      <label for="support-message">How can we help?
+        <textarea id="support-message" name="message" rows="6" minlength="10" maxlength="1500" required></textarea>
+      </label>
+      <button class="button full">Send request <span aria-hidden="true">→</span></button>
+    </form>
+    <p class="support-note">Support requests are reviewed by staff in the operations dashboard. Email replies are not yet automated.</p>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

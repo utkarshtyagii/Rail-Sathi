@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% from 'admin/_components.html' import heading, metric %}
+{% block title %}Reports & analytics · Rail Sathi admin{% endblock %}
+{% block content %}<div class="admin-content">
+{{ heading('Reports & analytics', 'Explore booking volume, service completion, and estimated fares.', 'NETWORK PERFORMANCE', url_for('dashboards.admin_export_report'), 'Export demo report') }}
+<section class="admin-metrics">{{ metric('Bookings recorded', total, 'All booking records') }}{{ metric('Completion rate', '%.1f%%'|format(completion_rate), completed ~ ' completed', 'green') }}{{ metric('Average fare estimate', average_fare|inr, 'Across recorded bookings') }}{{ metric('Average rating', 'Not tracked', 'No rating records are stored') }}</section>
+<section class="admin-panel"><div class="admin-panel-heading"><div><h2>Booking volume by station</h2><p>Counts and fare estimates from recorded bookings; fare values are not captured revenue.</p></div><span class="admin-muted">All recorded dates</span></div><div class="admin-report-list">{% set max_count = station_rows|map(attribute='count')|max if station_rows else 0 %}{% set max_count = max_count if max_count > 0 else 1 %}{% for row in station_rows %}<div class="admin-report-row"><span>{{ row['station'].code }}</span><div><strong>{{ row['station'].name }}</strong><small>{{ row['count'] }} booking{{ '' if row['count'] == 1 else 's' }}</small></div><span class="admin-report-track"><i style="width:{{ (row['count'] / max_count * 100)|int }}%"></i></span><b>{{ row['fare']|inr }}</b></div>{% else %}<p class="admin-empty">No stations or booking activity are available yet.</p>{% endfor %}</div></section>
+<section class="admin-panel admin-report-note"><strong>About these figures</strong><p>Booking fares are the amounts estimated when requests were created. They can differ from payment attempts and should not be treated as revenue or settlement totals.</p></section>
+</div>{% endblock %}

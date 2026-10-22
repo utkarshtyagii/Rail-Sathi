@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications — Rail Sathi{% endblock %}
+
+{% block content %}
+<div class="passenger-page-content porter-page-content">
+  <header class="passenger-page-heading"><div><span class="passenger-eyebrow">PORTER WORKSPACE</span><h1>Notifications</h1><p>Assignment and service updates for your porter account.</p></div></header>
+  <section class="passenger-panel passenger-notification-list" aria-label="Job status updates">
+    {% if updates or support_updates %}
+      {% for update in updates %}
+      <article class="passenger-notification-row">
+        <span class="passenger-notification-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/></svg></span>
+        <div><strong>{{ update.status.replace('_', ' ')|title }}</strong><p>Assignment {{ update.booking.public_id }} · {{ update.booking.station.name }}{% if update.booking.service %} · {{ update.booking.service.name }}{% endif %}</p><small>{{ (update.created_at|india_utc).strftime('%d %b %Y, %I:%M %p') }}</small></div>
+        <a href="{{ url_for('dashboards.porter_jobs', q=update.booking.public_id) }}" aria-label="View assignment {{ update.booking.public_id }}">View job <span aria-hidden="true">→</span></a>
+      </article>
+      {% endfor %}
+      {% for ticket in support_updates %}
+      <article class="passenger-notification-row">
+        <span class="passenger-notification-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 13v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="12" width="5" height="8" rx="2"/><rect x="16" y="12" width="5" height="8" rx="2"/><path d="M16 20c-.5 1-1.5 1-4 1"/></svg></span>
+        <div><strong>Support ticket resolved</strong><p>{{ ticket.booking_reference or 'Support request' }} · TKT-{{ '%04d'|format(ticket.id) }}</p><small>{{ (ticket.closed_at|india_utc).strftime('%d %b %Y, %I:%M %p') }}</small></div>
+        <a href="{{ url_for('public.support') }}">View support <span aria-hidden="true">→</span></a>
+      </article>
+      {% endfor %}
+    {% else %}
+    <div class="passenger-empty-state"><span class="passenger-empty-icon" aria-hidden="true">✓</span><h3>No job updates yet</h3><p>New assignments and changes to your work will appear here.</p><a class="passenger-panel-link" href="{{ url_for('dashboards.porter_jobs') }}">View assigned jobs <span aria-hidden="true">→</span></a></div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

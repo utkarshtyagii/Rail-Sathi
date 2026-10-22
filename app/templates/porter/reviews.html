@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Ratings & reviews — Rail Sathi{% endblock %}
+
+{% block content %}
+<div class="passenger-page-content porter-page-content">
+  <header class="passenger-page-heading"><div><span class="passenger-eyebrow">PORTER WORKSPACE</span><h1>Ratings &amp; Reviews</h1><p>See passenger feedback about your service.</p></div></header>
+  <section class="passenger-panel porter-rating-panel">
+    <div class="porter-rating-summary"><span class="porter-rating-stars" aria-hidden="true">{{ '★' * ((average_rating|round|int) if average_rating else 0) }}{{ '☆' * (5 - ((average_rating|round|int) if average_rating else 0)) }}</span><strong>{{ '%.1f'|format(average_rating) if average_rating else '—' }}</strong><small>{{ reviews|length }} passenger rating{{ '' if reviews|length == 1 else 's' }}</small></div>
+    <div class="porter-rating-explanation"><h2>{{ 'Your passenger feedback' if reviews else 'No ratings recorded yet' }}</h2><p>Ratings are collected after a completed job and linked to that booking.</p><a class="passenger-panel-link" href="{{ url_for('dashboards.porter_history') }}">View completed jobs <span aria-hidden="true">→</span></a></div>
+  </section>
+  {% if reviews %}<section class="passenger-panel porter-review-list" aria-label="Passenger reviews">{% for review in reviews %}<article><div><strong>{{ review.passenger.name }}</strong><small>{{ review.booking.station.name }} · {{ (review.created_at|india_utc).strftime('%d %b %Y') }}</small></div><span class="porter-rating-stars" aria-label="{{ review.rating }} out of 5 stars">{{ '★' * review.rating }}{{ '☆' * (5 - review.rating) }}</span>{% if review.comment %}<p>{{ review.comment }}</p>{% endif %}</article>{% endfor %}</section>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}My bookings — Rail Sathi{% endblock %}
+
+{% block content %}
+<div class="passenger-page-content">
+  <header class="passenger-page-heading">
+    <div><h1>My bookings</h1><p>Manage upcoming, active, and past porter assistance.</p></div>
+    <a class="passenger-primary-button" href="{{ url_for('bookings.new') }}">New booking <span aria-hidden="true">→</span></a>
+  </header>
+  <section class="passenger-booking-tools" aria-label="Find and filter bookings">
+    <form class="passenger-search" method="get" action="{{ url_for('dashboards.passenger_bookings') }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>
+      <input type="search" name="q" value="{{ query }}" placeholder="Search booking, station, or train" aria-label="Search booking, station, or train">
+      <input type="hidden" name="status" value="{{ status_filter }}">
+    </form>
+    <nav class="passenger-filter-tabs" aria-label="Filter bookings">
+      {% for key, label in [('all', 'All'), ('active', 'Active'), ('completed', 'Completed'), ('cancelled', 'Cancelled')] %}
+      <a class="{{ 'is-selected' if status_filter == key else '' }}" href="{{ url_for('dashboards.passenger_bookings', status=key, q=query or None) }}" {% if status_filter == key %}aria-current="page"{% endif %}>{{ label }}</a>
+      {% endfor %}
+    </nav>
+  </section>
+  {% if bookings %}
+  <div class="passenger-booking-list passenger-booking-grid">
+    {% for booking in bookings %}{% include 'passenger/_booking_card.html' %}{% endfor %}
+  </div>
+  {% else %}
+  <section class="passenger-panel passenger-bookings-empty">
+    <span aria-hidden="true">✦</span>
+    <h2>{% if query or status_filter != 'all' %}No matching bookings{% else %}Your next trip starts here.{% endif %}</h2>
+    <p>{% if query or status_filter != 'all' %}Try another search or choose a different booking status.{% else %}When you request assistance, your booking and status updates will appear here.{% endif %}</p>
+    {% if not query and status_filter == 'all' %}<a class="passenger-primary-button" href="{{ url_for('bookings.new') }}">Plan a booking <span aria-hidden="true">→</span></a>{% endif %}
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

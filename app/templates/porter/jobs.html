@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% from 'porter/_job_card.html' import porter_job_card %}
+
+{% block title %}Assigned jobs — Rail Sathi{% endblock %}
+
+{% block content %}
+<div class="passenger-page-content porter-page-content">
+  <header class="passenger-page-heading">
+    <div><span class="passenger-eyebrow">PORTER WORKSPACE</span><h1>Assigned jobs</h1><p>Review journey details and keep each assignment moving.</p></div>
+  </header>
+  {% if current_user.porter_status != 'verified' %}
+  <section class="passenger-panel porter-review-state">
+    <span class="passenger-metric-icon is-red" aria-hidden="true">⌛</span>
+    <div><h2>{% if current_user.porter_status == 'rejected' %}Your profile needs an update{% elif current_user.porter_status == 'pending' %}Your application is being reviewed{% else %}Complete your porter profile{% endif %}</h2><p>{% if current_user.porter_status == 'rejected' and current_user.porter_review_note %}{{ current_user.porter_review_note }}{% else %}Assigned jobs will appear here after staff verify your porter profile.{% endif %}</p><a class="passenger-panel-link" href="{{ url_for('dashboards.porter_profile') }}">Review profile details <span aria-hidden="true">→</span></a></div>
+  </section>
+  {% else %}
+  <section class="passenger-panel porter-jobs-toolbar" aria-label="Filter assigned jobs">
+    <form class="passenger-search" method="get" action="{{ url_for('dashboards.porter_jobs') }}"><label class="sr-only" for="porter-job-search">Search jobs</label><span aria-hidden="true">⌕</span><input id="porter-job-search" type="search" name="q" value="{{ query }}" placeholder="Search reference, station, or train"><input type="hidden" name="status" value="{{ status_filter }}"></form>
+    <nav class="passenger-filter-tabs" aria-label="Job status filters">
+      {% for key, label in [('all', 'All jobs'), ('active', 'Active'), ('completed', 'Completed')] %}<a class="{{ 'is-selected' if status_filter == key else '' }}" href="{{ url_for('dashboards.porter_jobs', status=key, q=query or None) }}" {% if status_filter == key %}aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
+    </nav>
+  </section>
+  {% if bookings %}
+  <section class="porter-job-list" aria-label="Your assigned jobs">{% for booking in bookings %}{{ porter_job_card(booking) }}{% endfor %}</section>
+  {% else %}
+  <section class="passenger-panel passenger-bookings-empty"><span aria-hidden="true">✓</span><h3>{% if query %}No jobs match your search{% elif status_filter == 'completed' %}No completed jobs yet{% else %}No assignments to show{% endif %}</h3><p>{% if query %}Try a different reference, station, or train number.{% else %}New assignments for your station will appear here.{% endif %}</p>{% if query %}<a class="passenger-panel-link" href="{{ url_for('dashboards.porter_jobs', status=status_filter) }}">Clear search <span aria-hidden="true">→</span></a>{% endif %}</section>
+  {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

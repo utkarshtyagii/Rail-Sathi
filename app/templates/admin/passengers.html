@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% from 'admin/_components.html' import heading, metric %}
+{% block title %}Passengers · Rail Sathi admin{% endblock %}
+{% block content %}<div class="admin-content">
+{{ heading('Passengers', 'Review passenger accounts and their contact details.', 'CUSTOMER DIRECTORY') }}
+<section class="admin-metrics admin-metrics-single">{{ metric('Registered passengers', total_passengers, 'All passenger accounts') }}</section>
+<section class="admin-panel"><div class="admin-panel-heading"><div><h2>Passenger directory</h2><p>Showing up to the latest 300 accounts.</p></div><form class="admin-search" method="get"><input name="q" value="{{ query }}" placeholder="Search name, email, or phone" aria-label="Search passengers"><button class="admin-button" type="submit">Search</button></form></div>
+<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Passenger</th><th>Email</th><th>Mobile</th><th>Bookings</th><th>Joined</th></tr></thead><tbody>{% for passenger in passengers %}<tr><td><strong>{{ passenger.name }}</strong></td><td>{{ passenger.email }}</td><td>{{ passenger.phone or 'Not provided' }}</td><td>{{ passenger.bookings|length }}</td><td>{{ (passenger.created_at|india_utc).strftime('%d %b %Y') }}</td></tr>{% else %}<tr><td colspan="5" class="admin-empty">No passengers match this search.</td></tr>{% endfor %}</tbody></table></div></section>
+</div>{% endblock %}

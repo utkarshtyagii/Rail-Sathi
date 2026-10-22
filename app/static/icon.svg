@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>Rail Sathi</title>
+  <rect width="512" height="512" rx="112" fill="#e93434"/>
+  <path fill="#fff" d="M160 112h126c63 0 102 34 102 91 0 39-22 68-58 81l68 116H304l-55-101h-4v101h-85V112Zm85 72v49h35c18 0 28-9 28-25s-10-24-28-24h-35Z"/>
+</svg>

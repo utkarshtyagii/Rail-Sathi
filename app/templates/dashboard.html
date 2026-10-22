@@ -1,0 +1,541 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ current_user.role|title }} dashboard — Rail Sathi{% endblock %}
+
+{% block content %}
+{% if current_user.role == 'passenger' %}
+<section class="passenger-content" id="dashboard">
+      <section class="passenger-welcome" aria-labelledby="passenger-welcome-title">
+        <div>
+          <span class="passenger-eyebrow">PASSENGER DASHBOARD</span>
+          <h1 id="passenger-welcome-title">Namaste, {{ current_user.name.split(' ')[0] }}</h1>
+          <p>Your next journey is ready. We’ll handle the heavy lifting.</p>
+        </div>
+        <a class="passenger-primary-button" href="{{ url_for('bookings.new') }}">Book a porter <span aria-hidden="true">→</span></a>
+      </section>
+
+      <section class="passenger-metrics" aria-label="Your travel summary">
+        <article class="passenger-metric-card"><div><span>Upcoming bookings</span><strong>{{ passenger_open_bookings|length }}</strong><small>Requests awaiting or receiving assistance</small></div><span class="passenger-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 10h16m-11 4h2m3 0h2m-7 3h2"/></svg></span></article>
+        <article class="passenger-metric-card"><div><span>Completed journeys</span><strong>{{ passenger_completed_count }}</strong><small>Finished assistance bookings</small></div><span class="passenger-metric-icon is-green"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span></article>
+        <article class="passenger-metric-card"><div><span>Preferred station</span><strong class="passenger-metric-contact">{{ current_user.preferred_station.code if current_user.preferred_station else 'Not set' }}</strong><small>{{ current_user.preferred_station.name if current_user.preferred_station else 'Choose a station when booking' }}</small></div><span class="passenger-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span></article>
+        <article class="passenger-metric-card"><div><span>Total bookings</span><strong>{{ bookings|length }}</strong><small>All your journey requests</small></div><span class="passenger-metric-icon is-red"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM4 10h16m-11 4h3"/></svg></span></article>
+      </section>
+
+      <div class="passenger-overview-grid">
+        <section class="passenger-panel passenger-next-panel" aria-labelledby="passenger-next-heading">
+          <div class="passenger-panel-heading"><div><span class="passenger-eyebrow">UPCOMING</span><h2 id="passenger-next-heading">Your next assistance</h2></div><a href="{{ url_for('dashboards.passenger_bookings', status='active') }}">View all</a></div>
+          {% if passenger_open_bookings %}
+          {% set next_booking = passenger_open_bookings[0] %}
+          <article class="passenger-next-booking">
+            <div class="passenger-booking-topline"><span>Reference {{ next_booking.public_id }}</span><span class="passenger-status status-{{ next_booking.status }}">{{ next_booking.status.replace('_', ' ')|title }}</span></div>
+            <div class="passenger-booking-route"><span class="passenger-station-code">{{ next_booking.station.code }}</span><div><h3>{{ next_booking.station.name }}</h3><p>{{ next_booking.service.name }} · {{ next_booking.pickup }} → {{ next_booking.destination }}</p></div></div>
+            <div class="passenger-booking-meta"><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 10h16"/></svg>{{ (next_booking.service_at|india_local).strftime('%d %b %Y') }}</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>{{ (next_booking.service_at|india_local).strftime('%I:%M %p') }}</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10l2 3v12l-2 3H7l-2-3V6l2-3Z"/><path d="M8 7h8v6H8z"/></svg>{{ next_booking.bags }} bag{{ '' if next_booking.bags == 1 else 's' }}</span></div>
+            {% set booking = next_booking %}{% include 'passenger/_handoff_otp.html' %}
+            {% if next_booking.status in ['assigned', 'accepted', 'en_route', 'arrived', 'in_progress'] %}{% set booking = next_booking %}{% set tracking_role = 'passenger' %}{% include '_booking_tracking.html' %}{% endif %}
+            <div class="passenger-booking-bottom"><strong>{{ next_booking.estimated_fare|inr }}</strong><a href="{{ url_for('dashboards.passenger_bookings', q=next_booking.public_id) }}">View booking <span aria-hidden="true">→</span></a></div>
+          </article>
+          {% else %}
+          <div class="passenger-empty-next"><span class="passenger-empty-icon" aria-hidden="true">✦</span><h3>No open requests yet</h3><p>When you book station assistance, its status and details will appear here.</p><a class="passenger-primary-button" href="{{ url_for('bookings.new') }}">Plan a booking <span aria-hidden="true">→</span></a></div>
+          {% endif %}
+        </section>
+
+        <aside class="passenger-side-panels">
+          <section class="passenger-panel passenger-station-panel" id="saved-stations" aria-labelledby="passenger-station-heading">
+            <div class="passenger-panel-heading"><h2 id="passenger-station-heading">Your station</h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
+            {% if current_user.preferred_station %}
+            <a class="passenger-station-link" href="{{ url_for('bookings.new', station=current_user.preferred_station.id) }}"><span>{{ current_user.preferred_station.code }}</span><strong>{{ current_user.preferred_station.name }}</strong><span aria-hidden="true">→</span></a>
+            {% else %}
+            <p class="passenger-panel-copy">Choose a supported station when you plan your next booking.</p>
+            <a class="passenger-panel-link" href="{{ url_for('bookings.new') }}">Choose a station <span aria-hidden="true">→</span></a>
+            {% endif %}
+          </section>
+
+          <section class="passenger-help-card"><span class="passenger-help-icon" aria-hidden="true">?</span><div><h2>Need help?</h2><p>Our support team can help with your journey.</p><a href="{{ url_for('public.support') }}">Get support</a></div></section>
+        </aside>
+      </div>
+
+</section>
+{% elif current_user.role == 'porter' %}
+{% from 'porter/_job_card.html' import porter_job_card %}
+<section class="passenger-content porter-content" id="dashboard">
+  <section class="passenger-welcome" aria-labelledby="porter-welcome-title">
+    <div>
+      <span class="passenger-eyebrow">PORTER WORKSPACE</span>
+      <h1 id="porter-welcome-title">Namaste, {{ current_user.name.split(' ')[0] }}</h1>
+      <p>{% if current_user.porter_status == 'verified' %}Your assigned journeys and next steps are ready here.{% elif current_user.porter_status == 'pending' %}Your application is with our team for review.{% elif current_user.porter_status == 'rejected' %}Update your details to request another review.{% else %}Complete your profile to start the porter review process.{% endif %}</p>
+    </div>
+    <a class="passenger-primary-button" href="{{ url_for('dashboards.porter_jobs') if current_user.porter_status == 'verified' else url_for('dashboards.porter_profile') }}">{{ 'View assigned jobs' if current_user.porter_status == 'verified' else 'Complete profile' }} <span aria-hidden="true">→</span></a>
+  </section>
+
+  <section class="passenger-metrics porter-metrics" aria-label="Your porter summary">
+    <article class="passenger-metric-card"><div><span>Active assignments</span><strong>{{ porter_active_bookings|length }}</strong><small>Jobs that need your attention</small></div><span class="passenger-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M9 7V4h6v3M8 12h8m-8 4h5"/></svg></span></article>
+    <article class="passenger-metric-card"><div><span>Completed jobs</span><strong>{{ porter_completed_count }}</strong><small>Finished porter assignments</small></div><span class="passenger-metric-icon is-green"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span></article>
+    <article class="passenger-metric-card"><div><span>Assigned station</span><strong class="passenger-metric-contact">{{ current_user.preferred_station.code if current_user.preferred_station else 'Not set' }}</strong><small>{{ current_user.preferred_station.name if current_user.preferred_station else 'Choose a supported station' }}</small></div><span class="passenger-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span></article>
+    <article class="passenger-metric-card"><div><span>Verification</span><strong class="porter-status-text">{{ current_user.porter_status|replace('_', ' ')|title }}</strong><small>Porter profile review status</small></div><span class="passenger-metric-icon {{ 'is-green' if current_user.porter_status == 'verified' else 'is-red' }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 3v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6l8-3Z"/><path d="m9 12 2 2 4-4"/></svg></span></article>
+  </section>
+
+  <div class="passenger-overview-grid">
+    <section class="passenger-panel passenger-next-panel" aria-labelledby="porter-next-heading">
+      <div class="passenger-panel-heading"><div><span class="passenger-eyebrow">NEXT ASSIGNMENT</span><h2 id="porter-next-heading">Your next assistance</h2></div><a href="{{ url_for('dashboards.porter_jobs') }}">All jobs</a></div>
+      {% if porter_active_bookings %}
+        {{ porter_job_card(porter_active_bookings[0], true) }}
+      {% elif current_user.porter_status == 'verified' %}
+      <div class="passenger-empty-next"><span class="passenger-empty-icon" aria-hidden="true">✓</span><h3>You’re ready for your next job</h3><p>New assignments for {{ current_user.preferred_station.name if current_user.preferred_station else 'your station' }} will appear here.</p><a class="passenger-panel-link" href="{{ url_for('dashboards.porter_jobs') }}">Review completed jobs <span aria-hidden="true">→</span></a></div>
+      {% else %}
+      <div class="passenger-empty-next"><span class="passenger-empty-icon" aria-hidden="true">⌛</span><h3>{% if current_user.porter_status == 'rejected' %}Profile update needed{% elif current_user.porter_status == 'pending' %}Application under review{% else %}Complete your porter profile{% endif %}</h3><p>{% if current_user.porter_status == 'rejected' %}Read the staff note and update your contact or station details below.{% elif current_user.porter_status == 'pending' %}We’ll show assigned jobs here after your profile is verified.{% else %}Add a contact number and supported station so staff can review your application.{% endif %}</p></div>
+      {% endif %}
+    </section>
+
+    <aside class="passenger-side-panels porter-side-panels">
+      <section class="passenger-panel passenger-station-panel" aria-labelledby="porter-station-heading">
+        <div class="passenger-panel-heading"><h2 id="porter-station-heading">Your work station</h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
+        <p class="passenger-panel-copy">{{ current_user.preferred_station.name if current_user.preferred_station else 'Select a supported station to complete your application.' }}</p>
+        <div class="porter-availability"><span class="passenger-update-dot {{ 'is-warning' if current_user.porter_status != 'verified' or not porter_available else '' }}"></span><div><strong>{% if current_user.porter_status != 'verified' %}Not taking assignments{% elif porter_available %}Ready for an assignment{% else %}Currently assigned{% endif %}</strong><small>{{ current_user.porter_status|replace('_', ' ')|title }} porter profile</small></div></div>
+      </section>
+      <section class="passenger-help-card"><span class="passenger-help-icon" aria-hidden="true">?</span><div><h2>Need help?</h2><p>Contact the Rail Sathi team about your profile or assigned work.</p><a href="{{ url_for('public.support') }}">Get support</a></div></section>
+    </aside>
+  </div>
+
+  {% if current_user.porter_status != 'verified' %}
+  <section class="passenger-panel porter-application-panel" id="porter-application" aria-labelledby="porter-profile-heading">
+    <div class="passenger-panel-heading"><div><span class="passenger-eyebrow">PORTER PROFILE</span><h2 id="porter-profile-heading">{{ 'Application details' if current_user.porter_status == 'pending' else 'Complete your profile' }}</h2></div><a href="{{ url_for('dashboards.porter_profile') }}">Profile settings</a></div>
+    {% if current_user.porter_status == 'rejected' and current_user.porter_review_note %}<p class="porter-review-note"><strong>Staff note</strong>{{ current_user.porter_review_note }}</p>{% endif %}
+    <p class="passenger-panel-copy">Keep your contact number and preferred station up to date. Staff verify porter identities before jobs can be assigned.</p>
+    <form method="post" action="{{ url_for('dashboards.update_porter_application') }}" class="porter-profile-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="porter-phone">Phone number<input id="porter-phone" name="phone" type="tel" autocomplete="tel" value="{{ current_user.phone or '' }}" required></label>
+      <label for="porter-station">Preferred station<select id="porter-station" name="preferred_station" required><option value="">Select a station</option>{% for station in porter_stations %}<option value="{{ station.id }}" {% if current_user.preferred_station_id == station.id %}selected{% endif %}>{{ station.name }} ({{ station.code }})</option>{% endfor %}</select></label>
+      <button class="passenger-primary-button" type="submit">{{ 'Save details' if current_user.porter_status == 'pending' else 'Send for review' }} <span aria-hidden="true">→</span></button>
+    </form>
+  </section>
+  {% endif %}
+</section>
+{% else %}
+<section class="dashboard dashboard-{{ current_user.role }}" id="dashboard">
+  <header class="dashboard-masthead">
+    <div class="dashboard-hero-grid">
+      <div class="dashboard-head">
+        <div>
+          <div class="eyebrow">{{ current_user.role|upper }} DASHBOARD</div>
+          <h1>Good to see you,<br>{{ current_user.name.split(' ')[0] }}.</h1>
+          <p>
+            {% if current_user.role == 'admin' %}Review applications and coordinate station requests.
+            {% elif current_user.role == 'porter' and current_user.porter_status == 'verified' %}Manage the porter jobs assigned to you.
+            {% elif current_user.role == 'porter' and current_user.porter_status == 'pending' %}Your application is being reviewed. Your station and contact details are below.
+            {% elif current_user.role == 'porter' and current_user.porter_status == 'rejected' %}Update your application details to request another review.
+            {% elif current_user.role == 'porter' %}Complete your application details to request staff review.
+            {% else %}Your station assistance and upcoming journeys, all in one place.{% endif %}
+          </p>
+        </div>
+        {% if current_user.role == 'passenger' %}
+        <a class="button dashboard-hero-cta" href="{{ url_for('bookings.new') }}">New booking <span aria-hidden="true">→</span></a>
+        {% elif current_user.role == 'porter' and current_user.porter_status == 'verified' %}
+        <a class="button dashboard-hero-cta" href="#bookings">View assigned jobs <span aria-hidden="true">→</span></a>
+        {% elif current_user.role == 'porter' %}
+        <a class="button dashboard-hero-cta" href="#porter-application">Update application <span aria-hidden="true">→</span></a>
+        {% elif current_user.role == 'admin' %}
+        <a class="button dashboard-hero-cta" href="#porter-review">Review queue <span aria-hidden="true">→</span></a>
+        {% endif %}
+      </div>
+
+      <aside class="dashboard-highlight-card">
+        {% if current_user.role == 'passenger' %}
+        <span class="dashboard-highlight-kicker">YOUR RAIL SATHI ACCOUNT</span>
+        <div class="dashboard-highlight-person"><span class="dashboard-avatar">{{ current_user.name[:1]|upper }}</span><div><strong>{{ current_user.name }}</strong><small>{{ current_user.email }}</small></div></div>
+        <div class="dashboard-highlight-foot"><span class="dashboard-live-dot"></span>{{ active_booking_count }} active booking{{ '' if active_booking_count == 1 else 's' }}</div>
+        {% elif current_user.role == 'porter' %}
+        <span class="dashboard-highlight-kicker">PORTER STATUS</span>
+        <strong class="dashboard-highlight-title">
+          {% if current_user.porter_status == 'verified' %}Verified porter
+          {% elif current_user.porter_status == 'pending' %}Application under review
+          {% elif current_user.porter_status == 'rejected' %}Application needs attention
+          {% else %}Complete your application{% endif %}
+        </strong>
+        <p class="dashboard-highlight-description">{% if current_user.preferred_station %}{{ current_user.preferred_station.name }}{% else %}Add a preferred station to continue{% endif %}</p>
+        <div class="dashboard-highlight-foot"><span class="dashboard-live-dot {{ 'is-warning' if current_user.porter_status != 'verified' else '' }}"></span>{{ current_user.porter_status|replace('_', ' ')|title }}</div>
+        {% else %}
+        <span class="dashboard-highlight-kicker">RAIL SATHI OPERATIONS</span>
+        <strong class="dashboard-highlight-title">Station assistance overview</strong>
+        <p class="dashboard-highlight-description">Review requests, verify porters, and keep support moving.</p>
+        <div class="dashboard-highlight-foot"><span class="dashboard-live-dot {{ 'is-warning' if pending_porters or open_support_count else '' }}"></span>{{ pending_porters|length }} porter applications · {{ open_support_count }} open support</div>
+        {% endif %}
+      </aside>
+    </div>
+  </header>
+
+  <div class="dashboard-content">
+    <nav class="dashboard-shortcuts" aria-label="Dashboard sections">
+      {% if current_user.role == 'passenger' %}
+      <a href="#bookings">My bookings</a><a href="#profile">My profile</a><a href="{{ url_for('public.support') }}">Get help</a>
+      {% elif current_user.role == 'porter' %}
+      <a href="#bookings">Assigned jobs</a>{% if current_user.porter_status != 'verified' %}<a href="#porter-application">Application details</a>{% endif %}<a href="#profile">My profile</a><a href="{{ url_for('public.support') }}">Get help</a>
+      {% else %}
+      <a href="#porter-review">Porter applications</a><a href="#bookings">Station requests</a><a href="#support-inbox">Support inbox</a><a href="#station-settings">Stations and services</a>{% if current_user.is_main_admin %}<a href="#admin-management">Admin accounts</a>{% endif %}
+      {% endif %}
+    </nav>
+
+    <div class="dashboard-stats">
+      {% if current_user.role == 'passenger' %}
+      <article><small>ALL BOOKINGS</small><strong>{{ bookings|length }}</strong><span>Journey requests</span></article>
+      <article><small>ACTIVE BOOKINGS</small><strong>{{ active_booking_count }}</strong><span>In progress or awaiting service</span></article>
+      <article><small>ACCOUNT TYPE</small><strong>Passenger</strong><span>Contact on file: {{ 'Phone added' if current_user.phone else 'Add your phone' }}</span></article>
+      {% elif current_user.role == 'porter' %}
+      <article><small>ASSIGNED JOBS</small><strong>{{ bookings|length }}</strong><span>Your station assignments</span></article>
+      <article><small>AVAILABILITY</small><strong>{% if current_user.porter_status == 'verified' %}{{ 'Available' if porter_available else 'On a job' }}{% else %}Not active{% endif %}</strong><span>{% if current_user.preferred_station %}{{ current_user.preferred_station.name }}{% else %}Preferred station needed{% endif %}</span></article>
+      <article><small>VERIFICATION</small><strong>{{ current_user.porter_status|replace('_', ' ')|title }}</strong><span>Staff-reviewed porter profile</span></article>
+      {% else %}
+      <article><small>STATION REQUESTS</small><strong>{{ bookings|length }}</strong><span>Recent passenger bookings</span></article>
+      <article><small>PORTER APPLICATIONS</small><strong>{{ pending_porters|length }}</strong><span>Waiting for review</span></article>
+      <article><small>OPEN SUPPORT</small><strong>{{ open_support_count }}</strong><span>Passenger requests to handle</span></article>
+      {% endif %}
+    </div>
+
+  <section class="profile-summary" id="profile" aria-label="My profile">
+    <div>
+      <div class="eyebrow">MY PROFILE</div>
+      <h2>{{ current_user.name }}</h2>
+      <p>{{ current_user.email }}{% if current_user.phone %}<span aria-hidden="true"> · </span>{{ current_user.phone }}{% endif %}</p>
+    </div>
+    <span class="profile-role">{{ current_user.role|title }}</span>
+  </section>
+
+  {% if current_user.role == 'admin' and current_user.is_main_admin %}
+  <section class="admin-panel" id="admin-management" aria-labelledby="admin-management-heading">
+    <div class="section-heading dash-title">
+      <div>
+        <h2 id="admin-management-heading">Administrator accounts</h2>
+        <p>Create staff administrators for porter verification, booking coordination, and passenger support. Only you can manage these accounts.</p>
+      </div>
+      <span class="admin-count">1 main admin</span>
+    </div>
+    <form class="service-admin-form admin-account-form" method="post" action="{{ url_for('admin.create_admin') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="new-admin-name">Full name
+        <input id="new-admin-name" name="name" maxlength="120" required>
+      </label>
+      <label for="new-admin-email">Email address
+        <input id="new-admin-email" name="email" type="email" maxlength="255" required>
+      </label>
+      <label for="new-admin-password">Temporary password
+        <input id="new-admin-password" name="password" type="password" minlength="12" maxlength="128" autocomplete="new-password" required>
+      </label>
+      <button class="button button-small">Create administrator</button>
+    </form>
+    {% if admin_accounts %}
+    <div class="application-list admin-account-list">
+      {% for account in admin_accounts %}
+      <article class="application-row">
+        <div class="application-person">
+          <strong>{{ account.name }}</strong>
+          <span>{{ account.email }}</span>
+          <small>{{ 'Active administrator' if account.active else 'Deactivated' }}</small>
+        </div>
+        <form method="post" action="{{ url_for('admin.update_admin_status', user_id=account.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="active" value="{{ '0' if account.active else '1' }}">
+          <button class="text-button {{ 'danger' if account.active else '' }}">{{ 'Deactivate' if account.active else 'Reactivate' }}</button>
+        </form>
+      </article>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if current_user.role == 'porter' and current_user.porter_status != 'verified' %}
+  <section class="porter-profile-card" id="porter-application" aria-labelledby="porter-profile-heading">
+    <div>
+      <h2 id="porter-profile-heading">Porter application details</h2>
+      <p>Keep your contact number and preferred station up to date. Staff must verify your identity through the approved in-person process before assigning jobs.</p>
+      {% if current_user.porter_status == 'rejected' and current_user.porter_review_note %}
+      <p class="application-review-note"><strong>Staff note:</strong> {{ current_user.porter_review_note }}</p>
+      {% endif %}
+    </div>
+    <form method="post" action="{{ url_for('dashboards.update_porter_application') }}" class="porter-profile-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="porter-phone">Phone number
+        <input id="porter-phone" name="phone" type="tel" autocomplete="tel" value="{{ current_user.phone or '' }}" required>
+      </label>
+      <label for="porter-station">Preferred station
+        <select id="porter-station" name="preferred_station" required>
+          <option value="">Select a station</option>
+          {% for station in porter_stations %}
+          <option value="{{ station.id }}" {% if current_user.preferred_station_id == station.id %}selected{% endif %}>{{ station.name }} ({{ station.code }})</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button class="button button-small">Save application details</button>
+    </form>
+  </section>
+  {% endif %}
+
+  {% if current_user.role == 'admin' %}
+  <section class="admin-panel" id="porter-review" aria-labelledby="porter-review-heading">
+    <div class="section-heading dash-title">
+      <div>
+        <h2 id="porter-review-heading">Porter applications</h2>
+        <p>Confirm identity through the approved process before applicants can receive passenger requests.</p>
+      </div>
+      <span class="admin-count">{{ pending_porters|length }} awaiting review</span>
+    </div>
+    {% if pending_porters %}
+    <div class="application-list">
+      {% for porter in pending_porters %}
+      <article class="application-row">
+        <div class="application-person">
+          <strong>{{ porter.name }}</strong>
+          <span>{{ porter.email }}{% if porter.phone %} · {{ porter.phone }}{% endif %}</span>
+          <small>Preferred station: {{ porter.preferred_station.name if porter.preferred_station else 'Not selected' }}</small>
+        </div>
+        <div class="application-actions">
+          <form method="post" action="{{ url_for('admin.review_porter', user_id=porter.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="decision" value="verify">
+            <button class="button button-small">Verify porter</button>
+          </form>
+          <form method="post" action="{{ url_for('admin.review_porter', user_id=porter.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="decision" value="reject">
+            <label class="sr-only" for="reject-note-{{ porter.id }}">Reason for rejection</label>
+            <input id="reject-note-{{ porter.id }}" class="reject-note" name="review_note" placeholder="Reason for rejection" maxlength="300" required>
+            <button class="text-button danger">Reject</button>
+          </form>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state compact-empty"><h3>No applications waiting</h3><p>New porter applications will appear here.</p></div>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <div class="section-heading dash-title booking-section-heading" id="bookings">
+    <div>
+      <h2>{% if current_user.role == 'admin' %}Station requests{% elif current_user.role == 'porter' %}Your assigned jobs{% else %}Your bookings{% endif %}</h2>
+      <p>{% if current_user.role == 'admin' %}Assign each request to a verified porter at the same station. Declined jobs can be reassigned.
+        {% elif current_user.role == 'porter' %}Accept or decline new assignments, then update each accepted job as you make progress.
+        {% else %}Booking status and estimated fare.{% endif %}</p>
+    </div>
+  </div>
+
+  {% if bookings %}
+  <div class="booking-list">
+    {% for booking in bookings %}
+    <article class="booking-row dashboard-booking-row">
+      <div class="booking-id">{{ booking.public_id }}</div>
+      <div class="booking-info">
+        <strong>{{ booking.service.name }} · {{ booking.station.name }}</strong>
+        <span>{{ booking.pickup }} → {{ booking.destination }}</span>
+        <small>{{ (booking.service_at|india_local).strftime('%d %b %Y, %I:%M %p') }} · {{ booking.bags }} bag{{ '' if booking.bags == 1 else 's' }}</small>
+        {% if booking.train_number or booking.platform or booking.coach or booking.berth %}
+        <small>
+          {% if booking.train_number %}Train {{ booking.train_number }}{% endif %}
+          {% if booking.platform %} · Platform {{ booking.platform }}{% endif %}
+          {% if booking.coach %} · Coach {{ booking.coach }}{% endif %}
+          {% if booking.berth %} · Berth {{ booking.berth }}{% endif %}
+        </small>
+        {% endif %}
+        {% if booking.passenger_phone and current_user.role in ['admin', 'porter'] %}
+        <small>Passenger contact: <a href="tel:{{ booking.passenger_phone }}">{{ booking.passenger_phone }}</a></small>
+        {% endif %}
+        {% if current_user.role == 'passenger' and booking.porter and booking.status in ['accepted', 'en_route', 'arrived', 'in_progress', 'completed'] %}
+        <small>Porter: {{ booking.porter.name }}{% if booking.porter.phone %} · <a href="tel:{{ booking.porter.phone }}">{{ booking.porter.phone }}</a>{% endif %}</small>
+        {% endif %}
+        {% if booking.instructions %}<small class="booking-instructions">Note: {{ booking.instructions }}</small>{% endif %}
+        {% if current_user.role == 'admin' and booking.porter %}<small>Porter: {{ booking.porter.name }}</small>{% endif %}
+        <details class="booking-history">
+          <summary>Status history</summary>
+          <ol>
+            {% for event in booking.history %}
+            <li><strong>{{ event.status.replace('_', ' ')|title }}</strong><time>{{ (event.created_at|india_utc).strftime('%d %b, %I:%M %p') }}</time></li>
+            {% endfor %}
+          </ol>
+        </details>
+      </div>
+      <span class="status status-{{ booking.status }}">{{ booking.status.replace('_',' ')|title }}</span>
+      <strong class="booking-price">{{ booking.estimated_fare|inr }}</strong>
+
+      {% if booking.status == 'completed' and current_user.role == 'passenger' %}
+        {% set latest_payment = booking.payments|first %}
+        {% if latest_payment and latest_payment.status == 'paid' %}
+        <span class="payment-note payment-paid">Paid · {{ booking.estimated_fare|inr }}</span>
+        {% elif latest_payment and latest_payment.status in ['authorized', 'processing'] %}
+        <span class="payment-note">Payment is awaiting capture confirmation from Razorpay.</span>
+        {% elif payments_enabled %}
+        <form method="post" action="{{ url_for('payments.start_checkout', booking_id=booking.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="button button-small">Pay {{ booking.estimated_fare|inr }}</button>
+        </form>
+        {% else %}
+        <span class="payment-note">Payment setup is not connected yet. Contact support to arrange payment.</span>
+        {% endif %}
+      {% elif booking.status == 'completed' and current_user.role == 'admin' %}
+        {% set latest_payment = booking.payments|first %}
+        <span class="payment-note">{{ 'Paid' if latest_payment and latest_payment.status == 'paid' else 'Payment pending' }}</span>
+      {% endif %}
+
+      {% if current_user.role == 'admin' and booking.status in ['requested', 'declined'] %}
+      {% set matching_porters = verified_porters|selectattr('porter_available')|selectattr('preferred_station_id', 'equalto', booking.station_id)|rejectattr('id', 'equalto', booking.porter_id)|rejectattr('id', 'in', busy_porter_ids)|list %}
+      <form class="assignment-form" method="post" action="{{ url_for('admin.assign_booking', booking_id=booking.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="sr-only" for="porter-{{ booking.id }}">{{ 'Reassign' if booking.status == 'declined' else 'Assign' }} to an online porter</label>
+        <select id="porter-{{ booking.id }}" name="porter_id" required>
+          <option value="">Choose online porter</option>
+          {% for porter in matching_porters %}
+          <option value="{{ porter.id }}">{{ porter.name }}</option>
+          {% endfor %}
+        </select>
+        <button class="button button-small" {% if not matching_porters %}disabled{% endif %}>{{ 'Reassign' if booking.status == 'declined' else 'Assign' }}</button>
+      </form>
+      {% if not matching_porters %}<small class="no-porter-note">{{ 'No other verified porter is available for this station yet.' if booking.status == 'declined' else 'No verified porter is available for this station yet.' }}</small>{% endif %}
+      {% elif current_user.role == 'porter' and current_user.porter_status == 'verified' and booking.status == 'assigned' %}
+        <div class="application-actions">
+          <form method="post" action="{{ url_for('bookings.update_status', booking_id=booking.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="status" value="accepted">
+            <button class="button button-small">Accept job</button>
+          </form>
+          <form method="post" action="{{ url_for('bookings.update_status', booking_id=booking.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="status" value="declined">
+            <button class="text-button danger">Decline</button>
+          </form>
+        </div>
+      {% elif current_user.role == 'porter' and current_user.porter_status == 'verified' %}
+        {% set next_status = {'accepted': 'en_route', 'en_route': 'arrived', 'arrived': 'in_progress', 'in_progress': 'completed'}.get(booking.status) %}
+        {% if next_status %}
+        <form method="post" action="{{ url_for('bookings.update_status', booking_id=booking.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="status" value="{{ next_status }}">
+          <button class="button button-small">Mark {{ next_status.replace('_', ' ') }}</button>
+        </form>
+        {% endif %}
+      {% elif current_user.role == 'passenger' and booking.status in ['requested', 'assigned', 'declined'] %}
+      <form method="post" action="{{ url_for('bookings.update_status', booking_id=booking.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="status" value="cancelled">
+        <button class="text-button danger">Cancel</button>
+      </form>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <span aria-hidden="true">✦</span>
+    {% if current_user.role == 'porter' and current_user.porter_status == 'pending' %}
+    <h3>Your application is under review</h3>
+    <p>Once verified by staff, assigned jobs will appear here.</p>
+    {% elif current_user.role == 'porter' and current_user.porter_status == 'rejected' %}
+    <h3>Your application needs attention</h3>
+    <p>Update your details above or contact staff to understand the next step.</p>
+    {% elif current_user.role == 'porter' and current_user.porter_status != 'verified' %}
+    <h3>Complete your application</h3>
+    <p>Once staff review and verify your application, assigned jobs will appear here.</p>
+    {% elif current_user.role == 'passenger' %}
+    <h3>Your next trip starts here.</h3>
+    <p>When you request assistance, it’ll show up here.</p>
+    <a class="button" href="{{ url_for('bookings.new') }}">Plan a booking</a>
+    {% elif current_user.role == 'porter' %}
+    <h3>No jobs assigned yet</h3>
+    <p>New assignments for your station will appear here.</p>
+    {% else %}
+    <h3>No station requests yet</h3>
+    <p>Passenger requests will appear here when submitted.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if current_user.role == 'admin' %}
+  <section class="admin-panel support-inbox" id="support-inbox" aria-labelledby="support-inbox-heading">
+    <div class="section-heading dash-title">
+      <div>
+        <h2 id="support-inbox-heading">Support inbox</h2>
+        <p>Review incoming messages and close requests once they have been handled.</p>
+      </div>
+      <span class="admin-count">{{ open_support_count }} open</span>
+    </div>
+    {% if support_requests %}
+    <div class="support-request-list">
+      {% for support_request in support_requests %}
+      <article class="support-request-row">
+        <div class="support-request-head">
+          <div>
+            <strong>#{{ support_request.id }} · {{ support_request.name }}</strong>
+            <a href="mailto:{{ support_request.email }}">{{ support_request.email }}</a>
+          </div>
+          <small>{{ (support_request.created_at|india_utc).strftime('%d %b %Y, %I:%M %p') }}</small>
+        </div>
+        {% if support_request.booking_reference %}<small class="support-booking-reference">Booking reference: {{ support_request.booking_reference }}</small>{% endif %}
+        <p>{{ support_request.message }}</p>
+        <span class="status {{ 'status-completed' if support_request.status == 'closed' else 'status-pending' }}">{{ 'Handled' if support_request.status == 'closed' else 'Open' }}</span>
+        {% if support_request.status == 'open' %}
+        <form method="post" action="{{ url_for('admin.update_support_request', request_id=support_request.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="status" value="closed">
+          <button class="button button-small">Mark handled</button>
+        </form>
+        {% else %}
+        <form method="post" action="{{ url_for('admin.update_support_request', request_id=support_request.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="status" value="open">
+          <button class="text-button">Reopen request</button>
+        </form>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state compact-empty"><h3>No support requests yet</h3><p>New passenger messages will appear here.</p></div>
+    {% endif %}
+  </section>
+
+  <section class="admin-panel catalog-panel" id="station-settings" aria-labelledby="catalog-heading">
+    <div class="section-heading dash-title">
+      <div>
+        <h2 id="catalog-heading">Stations and services</h2>
+        <p>Control which locations accept new bookings and keep base fares current.</p>
+      </div>
+    </div>
+    <div class="station-admin-list">
+      {% for station in catalog_stations %}
+      <details class="station-admin-card">
+        <summary>
+          <span><strong>{{ station.name }}</strong><small>{{ station.code }} · {{ station.services|length }} services</small></span>
+          <span class="status {{ 'status-completed' if station.supported else 'status-cancelled' }}">{{ 'Available' if station.supported else 'Hidden' }}</span>
+        </summary>
+        <div class="station-admin-content">
+          <form class="station-availability-form" method="post" action="{{ url_for('admin.update_station_availability', station_id=station.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="supported" value="{{ '0' if station.supported else '1' }}">
+            <button class="text-button">{{ 'Hide station from new bookings' if station.supported else 'Make station available' }}</button>
+          </form>
+          {% for service in station.services|sort(attribute='name') %}
+          <form class="service-admin-form" method="post" action="{{ url_for('admin.update_service', service_id=service.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="service-admin-name"><strong>{{ service.name }}</strong><small>{{ service.description }}</small></div>
+            <label for="fare-{{ service.id }}">Base fare (₹)
+              <input id="fare-{{ service.id }}" name="base_fare" type="number" min="1" max="100000" step="0.01" value="{{ '%.2f'|format(service.base_fare) }}" required>
+            </label>
+            <label for="active-{{ service.id }}">Availability
+              <select id="active-{{ service.id }}" name="active">
+                <option value="1" {% if service.active %}selected{% endif %}>Available</option>
+                <option value="0" {% if not service.active %}selected{% endif %}>Hidden</option>
+              </select>
+            </label>
+            <button class="button button-small">Save</button>
+          </form>
+          {% else %}
+          <p class="catalog-empty">No services configured for this station.</p>
+          {% endfor %}
+        </div>
+      </details>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

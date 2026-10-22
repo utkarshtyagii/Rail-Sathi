@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}The Rail Sathi journey{% endblock %}
+{% block content %}
+{% set booking_url = url_for('bookings.new') %}
+{% set booking_start_url = booking_url if current_user.is_authenticated and current_user.role == 'passenger' else (url_for('dashboards.index') if current_user.is_authenticated else url_for('auth.login', next=booking_url)) %}
+{% set journey_action_label = 'Book a porter' if not current_user.is_authenticated or current_user.role == 'passenger' else 'Go to your dashboard' %}
+<div class="rail-journey" data-rail-journey>
+  <header class="journey-header">
+    <a class="journey-brand" href="{{ url_for('public.home') }}" aria-label="Rail Sathi home">
+      <img class="journey-brand-logo" src="{{ url_for('static', filename='images/rail-sathi-logo.png', v='logo-20261015-1') }}" alt="">
+    </a>
+    <div class="journey-header-label"><i></i> THE RAIL SATHI JOURNEY</div>
+    <div class="journey-header-actions">
+      <button class="journey-theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Switch to light mode">
+        <span data-theme-icon aria-hidden="true">☼</span><span data-theme-label>Light mode</span>
+      </button>
+      <a class="journey-back-link" href="{{ url_for('public.home') }}"><span aria-hidden="true">←</span> {{ 'Back to dashboard' if current_user.is_authenticated else 'Back home' }}</a>
+    </div>
+  </header>
+
+  <div class="journey-chapter-marker" aria-live="polite">
+    <span data-journey-number>01</span><i></i><span data-journey-label>The station</span>
+  </div>
+
+  <div class="journey-chapters">
+    <section class="journey-chapter" id="journey-station" data-journey-chapter data-label="The station" aria-labelledby="journey-title-station">
+      <div class="journey-stage journey-stage-opening">
+        <img class="journey-stage-photo" data-journey-photo src="{{ url_for('static', filename='images/journey-opening-howrah.jpg', v='journey-opening-20261015-1') }}" alt="A passenger train at Howrah station in the evening light">
+        <div class="journey-photo-shade" aria-hidden="true"></div>
+        <div class="journey-copy journey-opening-copy" data-journey-copy>
+          <p class="journey-eyebrow">THE RAIL SATHI JOURNEY</p>
+          <h1 id="journey-title-station">Every Journey<br>Has a Beginning.</h1>
+          <p class="journey-description">A platform, a departure, and a little less to carry.</p>
+        </div>
+        <a class="journey-scroll-cue" href="#journey-help"><span>SCROLL TO TRAVEL</span><i></i></a>
+        <span class="journey-scene-number">01 / 05</span>
+      </div>
+    </section>
+
+    <section class="journey-chapter" id="journey-help" data-journey-chapter data-label="Help arrives" aria-labelledby="journey-title-help">
+      <div class="journey-stage journey-stage-help">
+        <div class="journey-copy journey-help-copy" data-journey-copy>
+          <p class="journey-eyebrow">RIGHT WHEN YOU NEED IT</p>
+          <h2 id="journey-title-help">Your Luggage<br>Is in Good Hands.</h2>
+          <p class="journey-description">A Rail Sathi porter meets you on the platform and moves every bag with care.</p>
+        </div>
+        <img class="journey-porter" data-journey-photo src="{{ url_for('static', filename='images/porter-trolley.png', v='porter-trolley-20261015-1') }}" alt="A porter moving luggage on a trolley">
+        <a class="journey-forward" href="#journey-freedom">KEEP GOING <span aria-hidden="true">↓</span></a>
+      </div>
+    </section>
+
+    <section class="journey-chapter" id="journey-freedom" data-journey-chapter data-label="More freedom" aria-labelledby="journey-title-freedom">
+      <div class="journey-stage journey-stage-freedom">
+        <img class="journey-freedom-photo" data-journey-photo src="{{ url_for('static', filename='images/journey-freedom-sunset.jpg', v='journey-freedom-20261015-1') }}" alt="A train passing a quiet railway platform at sunset">
+        <div class="journey-freedom-shade" aria-hidden="true"></div>
+        <div class="journey-copy journey-freedom-copy" data-journey-copy>
+          <p class="journey-eyebrow">THE JOURNEY OPENS UP</p>
+          <h2 id="journey-title-freedom">Less Luggage.<br>More Freedom.</h2>
+          <p class="journey-description">With the heavy lifting handled, all that remains is the journey ahead.</p>
+        </div>
+        <span class="journey-scene-number">03 — 05</span>
+        <a class="journey-forward" href="#journey-arrival">FORWARD <span aria-hidden="true">↓</span></a>
+      </div>
+    </section>
+
+    <section class="journey-chapter" id="journey-arrival" data-journey-chapter data-label="Arrival" aria-labelledby="journey-title-arrival">
+      <div class="journey-stage journey-stage-arrival">
+        <div class="journey-arrival-image"><img data-journey-photo src="{{ url_for('static', filename='images/arrival-reference.png', v='arrival-reference-20261015-1') }}" alt="A busy Indian railway station hall with trains on both sides of the platform"></div>
+        <div class="journey-arrival-copy journey-copy" data-journey-copy>
+          <p class="journey-eyebrow journey-eyebrow-sub">RIGHT WHERE YOU NEED TO BE</p>
+          <h2 id="journey-title-arrival">From Platform to Train, Made Easier.</h2>
+          <p class="journey-description">Your luggage arrives safely at the coach, leaving you free to settle in and enjoy the moment.</p>
+          <div class="journey-trust-points"><span><b aria-hidden="true">♢</b> Verified assistance</span><span><b aria-hidden="true">♧</b> Careful handling</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="journey-chapter" id="journey-start" data-journey-chapter data-label="Your next journey" aria-labelledby="journey-title-start">
+      <div class="journey-stage journey-stage-finish">
+        <span class="journey-finish-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3h8a3 3 0 0 1 3 3v9a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V6a3 3 0 0 1 3-3Z"/><path d="M8 7h8v6H8zM8 16h.01M16 16h.01M8 19l-2 2m10-2 2 2"/></svg></span>
+        <div class="journey-copy journey-finish-copy" data-journey-copy>
+          <p class="journey-eyebrow">YOUR NEXT JOURNEY STARTS HERE</p>
+          <h2 id="journey-title-start">Carry memories.<br>Not luggage.</h2>
+          <p class="journey-description">Book a trusted porter and leave the heavy lifting to us. Your journey starts with ease.</p>
+          <a class="journey-book-button" href="{{ booking_start_url }}">{{ journey_action_label }} <span aria-hidden="true">→</span></a>
+        </div>
+        <a class="journey-finish-home" href="{{ url_for('public.home') }}">← Back to Rail Sathi</a>
+        <span class="journey-scene-number">05 / 05</span>
+      </div>
+    </section>
+  </div>
+  <div class="journey-progress-track" aria-hidden="true"><span data-journey-progress></span></div>
+</div>
+{% endblock %}

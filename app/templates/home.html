@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Rail Sathi — Travel light. We’ll carry the rest.{% endblock %}
+
+{% block content %}
+{% set booking_url = url_for('bookings.new') %}
+{% set booking_start_url = booking_url if current_user.is_authenticated and current_user.role == 'passenger' else (url_for('dashboards.index') if current_user.is_authenticated else url_for('auth.login', next=booking_url)) %}
+
+<div class="page redesign-home">
+    <section class="hero" id="home">
+      <img class="hero-photo" src="https://images.unsplash.com/photo-1639494095806-1680b909cb33?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=88&w=2000" alt="Passengers beside a train at an Indian railway platform">
+      <div class="hero-shade" aria-hidden="true"></div>
+      <div class="train-motion" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="hero-content">
+        <p class="eyebrow eyebrow-hero">Porter assistance, thoughtfully arranged</p>
+        <h1>
+          <span class="headline-line"><span class="hero-word">Travel</span> <span class="hero-word">Light.</span></span>
+          <span class="headline-line"><span class="hero-word">We’ll</span> <span class="hero-word">Carry</span> <span class="hero-word">the</span> <span class="hero-word">Rest.</span></span>
+        </h1>
+        <p class="hero-copy">Your station. Your porter. A smoother journey.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="{{ booking_start_url }}">Book a porter <span aria-hidden="true">→</span></a>
+          <a class="button button-ghost" href="{{ url_for('public.journey') }}">Explore the experience <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+      <aside class="hero-assist-card" aria-label="How porter assistance works">
+        <div class="assist-card-label"><span>✦ Trusted assistance</span><small>Rail Sathi</small></div>
+        <div class="assist-porter">
+          <div class="assist-avatar"><img src="{{ url_for('static', filename='images/railway-porter-login.png', v='porter-photo-20261015-1') }}" alt=""><span aria-hidden="true">✓</span></div>
+          <div><span class="assist-verified">✓ Station-aware support</span><strong>Help with your luggage</strong></div>
+        </div>
+        <div class="assist-card-details">
+          <div class="assist-rating"><span>Clear fares</span><small>See estimate before request</small></div>
+          <div class="assist-availability"><span><i></i> {{ stations|length }} supported stations</span><small>Choose a station to check services</small></div>
+        </div>
+      </aside>
+      <a class="scroll-cue" href="#journey"><span>Scroll to begin</span><i></i></a>
+    </section>
+
+    <section class="journey" id="journey">
+      <div class="journey-copy">
+        <p class="eyebrow dark">A better arrival</p>
+        <h2>Every journey should begin without the hassle.</h2>
+        <p>From the moment your train arrives, Rail Sathi helps make station assistance easier to arrange and simpler to follow.</p>
+        <div class="trust-line"><span>✓ Porter applications reviewed</span><span>✓ Booking status in your dashboard</span></div>
+      </div>
+      <div class="journey-visual">
+        <img class="journey-image" src="{{ url_for('static', filename='images/landing-station.png', v='landing-photo-20261015-2') }}" alt="Train and passengers at a railway platform at sunset">
+        <div class="journey-note"><span aria-hidden="true">↗</span><span><strong>Plan ahead</strong> Request help for your station journey</span></div>
+      </div>
+    </section>
+
+    <section class="luggage-scroll" id="why-rail-sathi" data-luggage-scroll aria-label="The platform problem and how Rail Sathi helps">
+      <div class="luggage-scene">
+        <div class="scene-topline">
+          <span>The platform problem</span>
+          <span><span data-story-count>01</span> / 04</span>
+        </div>
+        <div class="problem-list" aria-label="Common travel challenges">
+          <p class="story-question is-active" data-story-step="0">Heavy luggage?</p>
+          <p class="story-question" data-story-step="1">Crowded platforms?</p>
+          <p class="story-question" data-story-step="2">No help nearby?</p>
+        </div>
+        <div class="solution-line" data-story-solution aria-hidden="true">
+          <span>There’s a lighter way.</span>
+          <h2>Your trusted porter is<br>just a booking away.</h2>
+        </div>
+        <div class="moving-porter" data-story-porter>
+          <img src="{{ url_for('static', filename='images/porter-trolley.png', v='porter-trolley-20261015-1') }}" alt="A porter pushing a trolley piled with luggage">
+        </div>
+        <div class="case-track" aria-hidden="true"><span data-story-progress></span></div>
+      </div>
+    </section>
+
+    <section class="how" id="how-it-works">
+      <div class="how-heading">
+        <div><p class="eyebrow dark">How Rail Sathi works</p><h2>From platform to peace of mind.</h2></div>
+        <p>Choose your station, share where to meet, and follow your request from your passenger dashboard.</p>
+      </div>
+      <div class="steps-grid">
+        <article class="step"><div class="step-head"><span>01</span><span aria-hidden="true">⌖</span></div><div><h3>Choose your station</h3><p>Start with a supported station and select the assistance service you need.</p></div><span class="step-line"></span></article>
+        <article class="step"><div class="step-head"><span>02</span><span aria-hidden="true">↗</span></div><div><h3>Review your request</h3><p>Add your journey details and see an estimated fare before sending it.</p></div><span class="step-line"></span></article>
+        <article class="step"><div class="step-head"><span>03</span><span aria-hidden="true">✓</span></div><div><h3>Follow its progress</h3><p>Check your booking status and coordinate with your assigned porter.</p></div><span class="step-line"></span></article>
+      </div>
+    </section>
+
+    <section class="stations" id="stations">
+      <div class="station-image">
+        <img src="{{ url_for('static', filename='images/railway-porter-login.png', v='station-porter-20261015-1') }}" alt="A Rail Sathi porter ready to help travellers at a railway station">
+      </div>
+      <div class="station-copy">
+        <p class="eyebrow">Trusted hands, right on time</p>
+        <h2>Real people.<br>Verified<br>support.</h2>
+        <p>Every Rail Sathi porter is identity-verified and station-approved, so help arrives exactly where you need it.</p>
+        <div class="station-stats">
+          <span><strong>{{ stations|length }}</strong><span>Supported stations</span></span>
+          <span><strong>Staff reviewed</strong><span>Porter applications</span></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="station-directory" id="station-list" aria-labelledby="station-list-heading">
+      <div class="how-heading">
+        <div><p class="eyebrow dark">Supported stations</p><h2 id="station-list-heading">Where can we help?</h2></div>
+        <form class="inline-search" method="get" action="{{ url_for('public.home') }}">
+          <label class="sr-only" for="station-filter">Filter stations by name or code</label>
+          <input id="station-filter" name="q" value="{{ query }}" placeholder="Station name or code">
+          <button type="submit" aria-label="Search stations">⌕</button>
+        </form>
+      </div>
+      <div class="station-grid">
+        {% for station in stations %}
+        {% set station_booking = url_for('bookings.new', station=station.id) %}
+        {% set station_link = station_booking if current_user.is_authenticated and current_user.role == 'passenger' else (url_for('dashboards.index') if current_user.is_authenticated else url_for('auth.login', next=station_booking)) %}
+        <a class="station-card" href="{{ station_link }}"><span class="station-code">{{ station.code }}</span><span><strong>{{ station.name }}</strong><small>{{ station.region }} · Check assistance options</small></span><span aria-hidden="true">→</span></a>
+        {% else %}<p>No supported stations match that search.</p>{% endfor %}
+      </div>
+    </section>
+
+    <section class="booking" id="book">
+      <div class="booking-kicker"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="4" width="10" height="15" rx="2.5"/><path d="M10 4V2h4v2M9 19v2m6-2v2M10 8h4m-4 4h4"/></svg> Your next journey</div>
+      <h2>Carry memories.<br>Not luggage.</h2>
+      <p>Book a trusted porter and leave the heavy lifting to us. Your journey starts with ease.</p>
+      <a class="button button-primary button-large" href="{{ booking_start_url }}">Book your porter <span aria-hidden="true">→</span></a>
+    </section>
+  <footer id="support" class="redesign-footer">
+    <div class="footer-main">
+      <a class="footer-wordmark" href="{{ url_for('public.home') }}" aria-label="Rail Sathi home">
+        <img class="footer-logo" src="{{ url_for('static', filename='images/rail-sathi-logo.png', v='logo-20261015-1') }}" alt="Rail Sathi">
+      </a>
+      <p>Making every station journey lighter, safer, and more human.</p>
+      <a class="footer-contact" href="mailto:hello@railsathi.in">hello@railsathi.in</a>
+    </div>
+    <div class="footer-bottom"><span>© 2026 RAIL SATHI</span><span>Made for journeys across India</span></div>
+  </footer>
+</div>
+{% endblock %}

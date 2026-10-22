@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Payments & receipts — Rail Sathi{% endblock %}
+
+{% block content %}
+<div class="passenger-page-content">
+  <header class="passenger-page-heading">
+    <div><h1>Payments &amp; receipts</h1><p>Review payment attempts recorded for your bookings.</p></div>
+  </header>
+  <section class="passenger-metrics passenger-payment-metrics" aria-label="Payment summary">
+    <article class="passenger-metric-card"><div><span>Total paid</span><strong>{{ paid_total|inr }}</strong><small>Confirmed payments only</small></div><span class="passenger-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 6h10M7 11h10m-9 5 8-10M8 16l8 0"/></svg></span></article>
+    <article class="passenger-metric-card"><div><span>Payment attempts</span><strong>{{ payment_rows|length }}</strong><small>For your recorded bookings</small></div><span class="passenger-metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18m-13 5h4"/></svg></span></article>
+    <article class="passenger-metric-card"><div><span>In progress</span><strong>{{ pending_count }}</strong><small>Awaiting payment confirmation</small></div><span class="passenger-metric-icon is-green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span></article>
+  </section>
+  <section class="passenger-panel passenger-table-panel" aria-labelledby="payment-history-title">
+    <div class="passenger-panel-heading"><h2 id="payment-history-title">Transaction history</h2><span class="passenger-panel-copy">{{ payment_rows|length }} recorded</span></div>
+    {% if payment_rows %}
+    <div class="passenger-table-scroll"><table class="passenger-data-table"><thead><tr><th>Booking</th><th>Date</th><th>Station</th><th>Amount</th><th>Status</th></tr></thead><tbody>
+      {% for row in payment_rows %}<tr><td>{{ row.booking.public_id }}</td><td>{{ (row.attempt.created_at|india_utc).strftime('%d %b %Y') }}</td><td>{{ row.booking.station.name }}</td><td>{{ row.amount|inr }}</td><td><span class="passenger-status status-{{ 'completed' if row.attempt.status == 'paid' else 'requested' if row.attempt.status in ['creating', 'created', 'authorized', 'processing'] else 'cancelled' }}">{{ row.attempt.status.replace('_', ' ')|title }}</span></td></tr>{% endfor %}
+    </tbody></table></div>
+    {% else %}
+    <div class="passenger-empty-state"><span class="passenger-empty-icon" aria-hidden="true">₹</span><h3>No payments recorded</h3><p>Payment activity will appear here after a payment is started for one of your bookings.</p><a class="passenger-panel-link" href="{{ url_for('dashboards.passenger_bookings') }}">View my bookings <span aria-hidden="true">→</span></a></div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

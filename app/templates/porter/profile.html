@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile & settings — Rail Sathi{% endblock %}
+
+{% block content %}
+<div class="passenger-page-content porter-page-content">
+  <header class="passenger-page-heading"><div><span class="passenger-eyebrow">PORTER WORKSPACE</span><h1>Profile &amp; settings</h1><p>Keep your contact information and work station current.</p></div></header>
+  <div class="passenger-profile-layout">
+    <section class="passenger-panel passenger-profile-summary">
+      <span class="passenger-user-avatar">{{ current_user.name[:2]|upper }}</span>
+      <h2>{{ current_user.name }}</h2>
+      <p>Kuli / Porter account</p>
+      <span class="passenger-profile-email">{{ current_user.email }}</span>
+      <span class="passenger-status {{ 'status-completed' if current_user.porter_status == 'verified' else 'status-requested' }}">{{ current_user.porter_status|replace('_', ' ')|title }}</span>
+      <small>Account created {{ (current_user.created_at|india_utc).strftime('%B %Y') }}</small>
+    </section>
+    <section class="passenger-panel passenger-profile-form-panel">
+      <h2>Personal information</h2>
+      <form method="post" class="form-stack passenger-profile-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-row">
+          <label for="porter-profile-name">Full name<input id="porter-profile-name" name="name" autocomplete="name" maxlength="120" value="{{ current_user.name }}" required></label>
+          <label for="porter-profile-phone">Mobile<input id="porter-profile-phone" name="phone" type="tel" autocomplete="tel" maxlength="30" value="{{ current_user.phone or '' }}" required></label>
+        </div>
+        <label for="porter-profile-email">Email address<input id="porter-profile-email" type="email" value="{{ current_user.email }}" readonly aria-describedby="porter-email-help"><small id="porter-email-help">Email address changes are not available here.</small></label>
+        {% if current_user.porter_status != 'verified' %}
+        <label for="porter-profile-station">Preferred station<select id="porter-profile-station" name="preferred_station" required><option value="">Select a supported station</option>{% for station in stations %}<option value="{{ station.id }}" {% if current_user.preferred_station_id == station.id %}selected{% endif %}>{{ station.name }} ({{ station.code }})</option>{% endfor %}</select><small>Staff review your application before you can receive assignments.</small></label>
+        {% else %}
+        <label for="porter-profile-station">Verified work station<input id="porter-profile-station" value="{{ current_user.preferred_station.name if current_user.preferred_station else 'Not assigned' }}" readonly><small>Contact support if your station assignment needs to change.</small></label>
+        {% endif %}
+        <button class="passenger-primary-button" type="submit">Save changes <span aria-hidden="true">→</span></button>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}

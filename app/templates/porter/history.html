@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% from 'porter/_job_card.html' import porter_job_card %}
+
+{% block title %}Job history — Rail Sathi{% endblock %}
+
+{% block content %}
+<div class="passenger-page-content porter-page-content">
+  <header class="passenger-page-heading"><div><span class="passenger-eyebrow">PORTER WORKSPACE</span><h1>Job History</h1><p>Look back at completed and closed assignments.</p></div></header>
+  {% if current_user.porter_status != 'verified' %}<section class="passenger-panel porter-review-state"><span class="porter-approval-icon is-review" aria-hidden="true">⌛</span><div><h2>Verification required</h2><p>Job history will be available after your porter profile is verified.</p><a class="passenger-panel-link" href="{{ url_for('dashboards.porter_verification') }}">Check verification <span aria-hidden="true">→</span></a></div></section>
+  {% else %}
+  <section class="passenger-panel porter-jobs-toolbar" aria-label="Search and filter job history">
+    <form class="passenger-search" method="get" action="{{ url_for('dashboards.porter_history') }}"><label class="sr-only" for="porter-history-search">Search job history</label><span aria-hidden="true">⌕</span><input id="porter-history-search" type="search" name="q" value="{{ query }}" placeholder="Search reference, station, train, or passenger"><input type="hidden" name="status" value="{{ status_filter }}"></form>
+    <nav class="passenger-filter-tabs" aria-label="Filter by job status">{% for key, label in [('all', 'All'), ('completed', 'Completed'), ('declined', 'Declined'), ('cancelled', 'Cancelled')] %}<a class="{{ 'is-selected' if status_filter == key else '' }}" href="{{ url_for('dashboards.porter_history', status=key, q=query or None) }}" {% if status_filter == key %}aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>
+  </section>
+  {% if bookings %}<section class="porter-job-list" aria-label="Past jobs">{% for booking in bookings %}{{ porter_job_card(booking, true) }}{% endfor %}</section>{% else %}<section class="passenger-panel passenger-bookings-empty"><span class="passenger-empty-icon" aria-hidden="true">✓</span><h3>{{ 'No matching jobs' if query else 'No past jobs yet' }}</h3><p>{{ 'Try a different search or status.' if query else 'Completed, declined, and cancelled assignments will appear here.' }}</p></section>{% endif %}
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% from 'admin/_components.html' import metric, heading, status, notice %}
+{% block title %}Admin dashboard · Rail Sathi{% endblock %}
+{% block content %}
+<div class="admin-content">
+  {{ heading('Good morning, ' ~ current_user.name.split(' ')[0], 'Here’s what is happening across the Rail Sathi network.', 'OPERATIONS OVERVIEW · ' ~ today_label, url_for('dashboards.admin_export_report'), 'Export summary') }}
+  {{ notice('Operational, payment, and identity information shown here comes from this application’s records. No external railway systems are connected.') }}
+
+  <section class="admin-metrics" aria-label="Platform overview">
+    {{ metric('Total passengers', passengers_count, 'Registered passenger accounts') }}
+    {{ metric('Registered porters', porters_count, 'Verified and active') }}
+    {{ metric('Pending verification', pending_verification_count, 'Porter profiles awaiting review', 'red') }}
+    {{ metric('Total bookings', booking_count, 'All recorded journey requests') }}
+    {{ metric('Active bookings', active_count, 'Assigned and in progress', 'green') }}
+    {{ metric('Completed today', completed_today_count, 'Based on service date') }}
+    {{ metric('Booking fare estimates', gross_estimates|inr, 'Estimated fares, not captured revenue') }}
+    {{ metric('Open support tickets', open_tickets, 'Need an administrator response', 'red') }}
+  </section>
+
+  <div class="admin-grid admin-grid-dashboard">
+    <section class="admin-panel admin-chart-panel">
+      <div class="admin-panel-heading"><div><span class="admin-eyebrow">BOOKING ACTIVITY</span><h2>New bookings · last 7 days</h2></div><a href="{{ url_for('dashboards.admin_bookings') }}">View bookings</a></div>
+      {% set chart_max = weekly_values|max if weekly_values else 0 %}{% set chart_max = chart_max if chart_max > 0 else 1 %}
+      <div class="admin-bar-chart" role="img" aria-label="Daily bookings for the last seven days">
+        {% for label in weekly_labels %}{% set value = weekly_values[loop.index0] %}<div class="admin-bar-column"><strong>{{ value }}</strong><span class="admin-bar" style="height:{{ (value / chart_max * 100)|int if value else 3 }}%"></span><small>{{ label }}</small></div>{% endfor %}
+      </div>
+    </section>
+    <section class="admin-panel admin-status-panel">
+      <div class="admin-panel-heading"><div><span class="admin-eyebrow">STATUS MIX</span><h2>Booking status</h2></div><a href="{{ url_for('dashboards.admin_bookings') }}">All records</a></div>
+      {% set done_pct = (status_counts.completed / status_total * 100) if status_total else 0 %}{% set active_pct = (status_counts.active / status_total * 100) if status_total else 0 %}{% set assign_pct = (status_counts.needs_assignment / status_total * 100) if status_total else 0 %}
+      <div class="admin-donut-row"><div class="admin-donut" style="--done:{{ done_pct }}%;--active:{{ active_pct }}%;--needs:{{ assign_pct }}%"><strong>{{ status_total }}</strong><small>tracked</small></div><ul><li><i class="done"></i>Completed <b>{{ status_counts.completed }}</b></li><li><i class="active"></i>In progress <b>{{ status_counts.active }}</b></li><li><i class="needs"></i>Needs assignment <b>{{ status_counts.needs_assignment }}</b></li><li><i class="cancelled"></i>Cancelled <b>{{ status_counts.cancelled }}</b></li></ul></div>
+    </section>
+  </div>
+
+  <div class="admin-grid admin-grid-lower">
+    <section class="admin-panel">
+      <div class="admin-panel-heading"><div><h2>Recent bookings</h2><p>Latest requests recorded in the system.</p></div><a href="{{ url_for('dashboards.admin_bookings') }}">View all <span aria-hidden="true">→</span></a></div>
+      <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Booking</th><th>Passenger</th><th>Station</th><th>Service</th><th>Fare estimate</th><th>Status</th></tr></thead><tbody>
+      {% for booking in recent_bookings %}<tr><td><strong>{{ booking.public_id }}</strong><small>{{ (booking.created_at|india_utc).strftime('%d %b · %H:%M') }}</small></td><td>{{ booking.passenger.name }}</td><td>{{ booking.station.code }}</td><td>{{ booking.service.name }}</td><td>{{ booking.estimated_fare|inr }}</td><td>{{ status(booking.status) }}</td></tr>{% else %}<tr><td colspan="6" class="admin-empty">No bookings are recorded yet.</td></tr>{% endfor %}
+      </tbody></table></div>
+    </section>
+    <section class="admin-panel admin-queue-panel">
+      <div class="admin-panel-heading"><div><h2>Verification queue</h2><p>{{ pending_verification_count }} pending</p></div><a href="{{ url_for('dashboards.admin_porters', status='pending') }}">Review all</a></div>
+      <div class="admin-queue-list">{% for porter in pending_porters %}<article><span class="admin-avatar">{{ porter.name[:2]|upper }}</span><div><strong>{{ porter.name }}</strong><small>{{ porter.preferred_station.code if porter.preferred_station else 'Station not selected' }} · {{ (porter.created_at|india_utc).strftime('%d %b') }}</small></div><a href="{{ url_for('dashboards.admin_porters', status='pending', q=porter.name) }}">Review</a></article>{% else %}<p class="admin-empty">No porter profiles are waiting for review.</p>{% endfor %}</div>
+    </section>
+  </div>
+</div>
+{% endblock %}

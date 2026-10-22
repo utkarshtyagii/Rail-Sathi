@@ -1,0 +1,64 @@
+<article class="passenger-booking-card" id="booking-{{ booking.public_id }}">
+  <div class="passenger-booking-topline">
+    <span>{{ booking.public_id }}</span>
+    <span class="passenger-status status-{{ booking.status }}">{{ booking.status.replace('_', ' ')|title }}</span>
+  </div>
+  <div class="passenger-booking-route">
+    <span class="passenger-station-code">{{ booking.station.code }}</span>
+    <div><h3>{{ booking.station.name }}</h3><p>{{ booking.pickup }} → {{ booking.destination }}</p></div>
+  </div>
+  <div class="passenger-booking-meta">
+    <span>{{ (booking.service_at|india_local).strftime('%d %b %Y') }}</span>
+    <span>{{ (booking.service_at|india_local).strftime('%I:%M %p') }}</span>
+    <span>{{ booking.bags }} bag{{ '' if booking.bags == 1 else 's' }}</span>
+    {% if booking.train_number %}<span>Train {{ booking.train_number }}</span>{% endif %}
+    {% if booking.platform %}<span>Platform {{ booking.platform }}</span>{% endif %}
+  </div>
+  <p class="passenger-booking-service">{{ booking.service.name }}{% if booking.coach %} · Coach {{ booking.coach }}{% endif %}{% if booking.berth %} · Berth {{ booking.berth }}{% endif %}</p>
+  {% if booking.porter and booking.status in ['accepted', 'en_route', 'arrived', 'in_progress', 'completed'] %}<p class="passenger-assigned-porter">Porter: <strong>{{ booking.porter.name }}</strong>{% if booking.porter.phone %} · <a href="tel:{{ booking.porter.phone }}">{{ booking.porter.phone }}</a>{% endif %}</p>{% endif %}
+  {% if booking.instructions %}<p class="passenger-assigned-porter">Your note: {{ booking.instructions }}</p>{% endif %}
+  {% include 'passenger/_handoff_otp.html' %}
+  {% if booking.status in ['assigned', 'accepted', 'en_route', 'arrived', 'in_progress'] %}
+    {% set tracking_role = 'passenger' %}
+    {% include '_booking_tracking.html' %}
+  {% endif %}
+  {% if booking.status == 'completed' and booking.porter %}
+    {% if booking.porter_review %}
+    <section class="passenger-porter-review is-submitted" aria-label="Your porter rating">
+      <div><strong>Your rating</strong><span class="passenger-review-stars" aria-label="{{ booking.porter_review.rating }} out of 5 stars">{{ '★' * booking.porter_review.rating }}{{ '☆' * (5 - booking.porter_review.rating) }}</span></div>
+      {% if booking.porter_review.comment %}<p>{{ booking.porter_review.comment }}</p>{% endif %}
+      <small>Thank you for sharing feedback about {{ booking.porter.name }}.</small>
+    </section>
+    {% else %}
+    <section class="passenger-porter-review" aria-labelledby="review-heading-{{ booking.id }}">
+      <div><strong id="review-heading-{{ booking.id }}">How was your porter?</strong><small>Your feedback helps improve station assistance.</small></div>
+      <form method="post" action="{{ url_for('bookings.submit_porter_review', booking_id=booking.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label for="review-rating-{{ booking.id }}">Rating
+          <select id="review-rating-{{ booking.id }}" name="rating" required>
+            <option value="">Choose stars</option><option value="5">5 · Excellent</option><option value="4">4 · Good</option><option value="3">3 · Okay</option><option value="2">2 · Poor</option><option value="1">1 · Very poor</option>
+          </select>
+        </label>
+        <label class="passenger-review-comment-label" for="review-comment-{{ booking.id }}">Optional feedback
+          <input id="review-comment-{{ booking.id }}" name="comment" type="text" maxlength="500" placeholder="Share a few words">
+        </label>
+        <button class="passenger-primary-button" type="submit">Submit rating</button>
+      </form>
+    </section>
+    {% endif %}
+  {% endif %}
+  <div class="passenger-booking-bottom">
+    <strong>{{ booking.estimated_fare|inr }}</strong>
+    <div class="passenger-booking-actions">
+      {% if booking.status == 'completed' %}
+        {% set latest_payment = booking.payments|first %}
+        {% if latest_payment and latest_payment.status == 'paid' %}<span class="passenger-payment-confirmed">Paid</span>
+        {% elif latest_payment and latest_payment.status in ['authorized', 'processing'] %}<span class="passenger-payment-pending">Payment processing</span>
+        {% elif payments_enabled %}<form method="post" action="{{ url_for('payments.start_checkout', booking_id=booking.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="passenger-inline-button" type="submit">Pay now <span aria-hidden="true">→</span></button></form>
+        {% else %}<span class="passenger-payment-pending">Payment is not available</span>{% endif %}
+      {% endif %}
+      {% if booking.status in ['requested', 'assigned', 'declined'] %}<form method="post" action="{{ url_for('bookings.update_status', booking_id=booking.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="status" value="cancelled"><button class="passenger-cancel-button" type="submit">Cancel request</button></form>{% endif %}
+      <details class="passenger-history"><summary>History</summary><ol>{% for event in booking.history %}<li><strong>{{ event.status.replace('_', ' ')|title }}</strong><time>{{ (event.created_at|india_utc).strftime('%d %b, %I:%M %p') }}</time></li>{% endfor %}</ol></details>
+    </div>
+  </div>
+</article>

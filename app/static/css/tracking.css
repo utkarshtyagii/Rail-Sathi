@@ -1,0 +1,211 @@
+.booking-tracking-card {
+  --tracking-ink: #0b1e31;
+  --tracking-muted: #6b7a89;
+  --tracking-line: #dce3e9;
+  margin-top: 22px;
+  padding: 20px;
+  color: var(--tracking-ink);
+  background: #fff;
+  border: 1px solid var(--tracking-line);
+  border-radius: 14px;
+}
+
+.booking-tracking-heading,
+.tracking-controls,
+.tracking-pickup,
+.tracking-participants > div {
+  display: flex;
+  align-items: center;
+}
+
+.booking-tracking-heading {
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.tracking-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.tracking-share-button,
+.tracking-stop-button {
+  min-height: 38px;
+  padding: 8px 13px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.tracking-share-button[hidden],
+.tracking-stop-button[hidden] { display: none; }
+
+.booking-tracking-heading h3 {
+  margin: 4px 0 0;
+  font-size: 20px;
+}
+
+.tracking-connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--tracking-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.tracking-connection::before,
+.tracking-dot {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  border-radius: 50%;
+  background: #8b98a5;
+}
+
+.tracking-connection.is-connected::before { background: #16805c; }
+.tracking-connection.is-disconnected::before { background: #d92b2f; }
+
+.tracking-pickup {
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: var(--tracking-muted);
+  font-size: 13px;
+}
+
+.tracking-pickup strong { color: var(--tracking-ink); }
+.tracking-pickup small { color: var(--tracking-muted); font-size: 11px; }
+
+.tracking-map-frame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--tracking-line);
+  border-radius: 10px;
+  background: #edf2f5;
+}
+
+.tracking-map {
+  width: 100%;
+  height: 260px;
+  z-index: 0;
+}
+
+.porter-job-card-compact .tracking-map { height: 200px; }
+
+.tracking-map-empty {
+  position: absolute;
+  z-index: 400;
+  top: 12px;
+  left: 50%;
+  width: min(90%, 420px);
+  margin: 0;
+  padding: 9px 12px;
+  transform: translateX(-50%);
+  color: #43566a;
+  background: #ffffffed;
+  border: 1px solid #dce3e9;
+  border-radius: 7px;
+  font-size: 12px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.tracking-map-empty[hidden] { display: none; }
+
+.tracking-participants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 28px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--tracking-line);
+}
+
+.tracking-participants > div { align-items: flex-start; gap: 9px; min-width: 185px; }
+.tracking-dot { margin-top: 4px; }
+.tracking-dot.is-passenger { background: #d92b2f; }
+.tracking-dot.is-porter { background: #16805c; }
+.tracking-participants strong,
+.tracking-participants small { display: block; }
+.tracking-participants strong { font-size: 13px; }
+.tracking-participants small { margin-top: 3px; color: var(--tracking-muted); font-size: 12px; }
+.tracking-participants small.is-stale { color: #9b6c08; }
+
+.tracking-distance {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px 12px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  color: var(--tracking-muted);
+  background: #f2f6f9;
+  border: 1px solid var(--tracking-line);
+  border-radius: 8px;
+  font-size: 12px;
+}
+.tracking-distance strong { color: var(--tracking-ink); font-size: 18px; }
+.tracking-distance small { flex-basis: 100%; color: var(--tracking-muted); font-size: 11px; }
+
+.tracking-controls {
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding-top: 14px;
+}
+
+.tracking-controls [data-tracking-message] {
+  flex: 1 1 260px;
+  color: var(--tracking-muted);
+  font-size: 12px;
+}
+
+.tracking-controls [data-tracking-message].is-error { color: #b4232a; }
+
+.tracking-marker-shell { background: transparent; border: 0; }
+.tracking-marker {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 8px #071a2e66;
+}
+.tracking-marker.is-passenger { background: #d92b2f; }
+.tracking-marker.is-porter { background: #16805c; }
+
+.tracking-waiting-note {
+  padding: 12px 14px;
+  color: #526477;
+  background: #eef5f9;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+html[data-theme="dark"] .booking-tracking-card {
+  --tracking-ink: #e7edf7;
+  --tracking-muted: #a5b1c4;
+  --tracking-line: #344156;
+  background: #172235;
+}
+
+html[data-theme="dark"] .tracking-map-empty {
+  color: #d9e2f0;
+  background: #172235ed;
+  border-color: #344156;
+}
+
+html[data-theme="dark"] .tracking-participants small.is-stale { color: #f1c76d; }
+html[data-theme="dark"] .tracking-waiting-note { color: #d1deee; background: #202d40; }
+html[data-theme="dark"] .tracking-distance { background: #101d2c; }
+
+@media (max-width: 680px) {
+  .booking-tracking-card { padding: 15px; }
+  .booking-tracking-heading { align-items: flex-start; }
+  .tracking-header-actions { align-items: flex-end; flex-direction: column; gap: 7px; }
+  .tracking-map { height: 220px; }
+  .porter-job-card-compact .tracking-map { height: 175px; }
+  .tracking-pickup { align-items: flex-start; flex-direction: column; gap: 3px; }
+  .tracking-share-button, .tracking-stop-button { max-width: 100%; }
+}

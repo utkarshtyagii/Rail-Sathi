@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% from 'porter/_job_card.html' import porter_job_card %}
+
+{% block title %}{{ page_title }} — Rail Sathi{% endblock %}
+
+{% block content %}
+<div class="passenger-page-content porter-page-content">
+  <header class="passenger-page-heading"><div><span class="passenger-eyebrow">{{ eyebrow }}</span><h1>{{ page_title }}</h1><p>{{ page_intro }}</p></div></header>
+  {% if show_verification_gate and current_user.porter_status != 'verified' %}
+  <section class="passenger-panel porter-review-state"><span class="porter-approval-icon is-review" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6l8-3Z"/></svg></span><div><h2>{% if current_user.porter_status == 'pending' %}Verification is in progress{% elif current_user.porter_status == 'rejected' %}Your profile needs an update{% else %}Verification required{% endif %}</h2><p>{% if current_user.porter_status == 'rejected' and current_user.porter_review_note %}{{ current_user.porter_review_note }}{% else %}This page becomes available after staff verify your porter profile.{% endif %}</p><a class="passenger-panel-link" href="{{ url_for('dashboards.porter_verification') }}">Check verification <span aria-hidden="true">→</span></a></div></section>
+  {% else %}
+  <section class="passenger-panel porter-jobs-toolbar" aria-label="Search {{ page_title|lower }}">
+    <form class="passenger-search" method="get" action="{{ url_for(list_endpoint) }}"><label class="sr-only" for="porter-list-search">Search {{ page_title|lower }}</label><span aria-hidden="true">⌕</span><input id="porter-list-search" type="search" name="q" value="{{ query }}" placeholder="Search reference, station, train, or passenger"></form>
+  </section>
+  {% if bookings %}<section class="porter-job-list" aria-label="{{ page_title }}">{% for booking in bookings %}{{ porter_job_card(booking) }}{% endfor %}</section>
+  {% else %}<section class="passenger-panel passenger-bookings-empty"><span class="passenger-empty-icon" aria-hidden="true">✓</span><h3>{{ 'No results found' if query else empty_title }}</h3><p>{{ 'Try another reference, station, train, or passenger name.' if query else empty_copy }}</p>{% if query %}<a class="passenger-panel-link" href="{{ url_for(list_endpoint) }}">Clear search <span aria-hidden="true">→</span></a>{% endif %}</section>{% endif %}
+  {% endif %}
+</div>
+{% endblock %}

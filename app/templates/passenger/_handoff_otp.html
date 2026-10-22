@@ -1,0 +1,19 @@
+{% if booking.status in ['arrived', 'in_progress'] %}
+  {% set handoff_code = passenger_handoff_code(booking) %}
+  <section class="passenger-handoff-code" aria-label="Porter handoff code">
+    <div>
+      <span class="passenger-eyebrow">{{ 'PORTER ARRIVED · START CODE' if booking.status == 'arrived' else 'JOB IN PROGRESS · COMPLETION CODE' }}</span>
+      {% if handoff_code %}
+      <strong class="passenger-handoff-code-value">{{ handoff_code }}</strong>
+      <p>{{ 'Share this six-digit code with your porter to start the assistance.' if booking.status == 'arrived' else 'Share this six-digit code with your porter to confirm the job is complete.' }}</p>
+      <small>Valid for 15 minutes. This demo shows the code in your account; SMS delivery is not connected.</small>
+      {% else %}
+      <p>Your code expired or reached its attempt limit. Generate a new code and share it with your porter.</p>
+      <form method="post" action="{{ url_for('bookings.regenerate_handoff_otp', booking_id=booking.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="passenger-inline-button" type="submit">Generate a new code</button>
+      </form>
+      {% endif %}
+    </div>
+  </section>
+{% endif %}

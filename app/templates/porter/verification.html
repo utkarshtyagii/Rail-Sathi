@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Verification &amp; documents — Rail Sathi{% endblock %}
+
+{% block content %}
+<div class="passenger-page-content porter-page-content porter-verification-page">
+  <header class="porter-verification-page-heading">
+    <div>
+      <span class="passenger-eyebrow">PORTER ACCOUNT</span>
+      <h1>Verification &amp; documents</h1>
+      <p>Identity review shown here is a frontend demonstration only.</p>
+    </div>
+    <span class="porter-document-status {{ 'is-approved' if current_user.porter_status == 'verified' else ('is-pending' if current_user.porter_status == 'pending' else 'is-needs-update' if current_user.porter_status == 'rejected' else 'is-not-submitted') }}">{{ current_user.porter_status|replace('_', ' ')|title }}</span>
+  </header>
+
+  <div class="porter-document-notice" role="note">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg>
+    <p>No real identity-verification or document-upload service is connected. These document rows are demo placeholders and no identity files are stored.</p>
+  </div>
+
+  <div class="porter-verification-layout">
+    <aside class="passenger-panel porter-verification-profile" aria-label="Porter profile summary">
+      <span class="porter-verification-avatar">{{ current_user.name[:2]|upper }}</span>
+      <h2>{{ current_user.name }}</h2>
+      <p class="porter-verification-profile-status"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 6v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6l8-3Z"/><path d="m9 12 2 2 4-4"/></svg>{{ document_status }}{% if current_user.porter_status == 'verified' %} · Verified porter{% endif %}</p>
+      <dl>
+        <div><dt>Porter ID</dt><dd>KU-{{ '%04d'|format(current_user.id) }}</dd></div>
+        <div><dt>Assigned station</dt><dd>{{ current_user.preferred_station.name if current_user.preferred_station else 'Not selected' }}{% if current_user.preferred_station %} ({{ current_user.preferred_station.code }}){% endif %}</dd></div>
+        <div><dt>Service area</dt><dd>All platforms</dd></div>
+      </dl>
+    </aside>
+
+    <section class="passenger-panel porter-documents-card" aria-labelledby="porter-documents-heading">
+      <div class="porter-documents-heading">
+        <div><span class="passenger-eyebrow">IDENTITY REVIEW</span><h2 id="porter-documents-heading">Submitted documents</h2></div>
+        <span class="porter-document-status {{ 'is-approved' if current_user.porter_status == 'verified' else ('is-pending' if current_user.porter_status == 'pending' else 'is-needs-update' if current_user.porter_status == 'rejected' else 'is-not-submitted') }}">{{ document_status }}</span>
+      </div>
+      <div class="porter-document-list">
+        {% for document in documents %}
+        <article class="porter-document-row">
+          <span class="porter-document-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v5h5m-9 6 2 2 4-4"/></svg></span>
+          <span class="porter-document-copy"><strong>{{ document.title }}</strong><small>{{ document.filename }} · Demo placeholder</small></span>
+          <span class="porter-document-status {{ 'is-approved' if current_user.porter_status == 'verified' else ('is-pending' if current_user.porter_status == 'pending' else 'is-needs-update' if current_user.porter_status == 'rejected' else 'is-not-submitted') }}">{{ document_status }}</span>
+        </article>
+        {% endfor %}
+      </div>
+      <a class="porter-document-edit-link" href="{{ url_for('dashboards.porter_profile') }}">Update profile details <span aria-hidden="true">→</span></a>
+    </section>
+  </div>
+</div>
+{% endblock %}

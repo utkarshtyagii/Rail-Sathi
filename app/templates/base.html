@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07152f">
+  <script>
+    try {
+      const savedTheme = localStorage.getItem('railSathiTheme');
+      if (savedTheme === 'dark' || (!savedTheme && location.pathname === '/journey')) document.documentElement.dataset.theme = 'dark';
+    } catch (_) {}
+  </script>
+  <title>{% block title %}Rail Sathi{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='icon.svg') }}" type="image/svg+xml">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css', v='rail-sathi-logo-20261022-6') }}">
+  {% if request.endpoint == 'public.home' %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/landing-page.css', v='landing-page-v1') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/landing-page-enhancements.css', v='landing-page-enhancements-v2') }}">
+  {% endif %}
+  {% if request.endpoint == 'public.journey' %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/journey.css', v='rail-sathi-journey-logo-20261022-1') }}">
+  {% endif %}
+  {% if current_user.is_authenticated and ((current_user.role == 'passenger' and request.endpoint in ['dashboards.index', 'dashboards.passenger_bookings']) or (current_user.role == 'porter' and request.endpoint in ['dashboards.index', 'dashboards.porter_active_job', 'dashboards.porter_jobs', 'dashboards.porter_requests'])) %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tracking.css', v='live-tracking-consent-v3') }}">
+  {% endif %}
+</head>
+{% set workspace_portal = current_user.is_authenticated and current_user.role in ['passenger', 'porter', 'admin'] and request.endpoint not in ['auth.login', 'auth.register', 'public.home', 'public.journey'] %}
+{% set portal_page_titles = {
+  'dashboards.index': 'Dashboard',
+  'dashboards.admin_passengers': 'Passengers',
+  'dashboards.admin_porters': 'Porters & Verification',
+  'dashboards.admin_bookings': 'Bookings',
+  'dashboards.admin_stations': 'Stations & Services',
+  'dashboards.admin_pricing': 'Pricing & Commission',
+  'dashboards.admin_payments': 'Payments & Refunds',
+  'dashboards.admin_support': 'Support Tickets',
+  'dashboards.admin_reports': 'Reports & Analytics',
+  'dashboards.admin_notifications': 'Notifications',
+  'dashboards.admin_settings': 'Admin Settings',
+  'bookings.new': 'Book a Porter',
+  'dashboards.passenger_bookings': 'My Bookings',
+  'dashboards.passenger_payments': 'Payments & Receipts',
+  'dashboards.passenger_notifications': 'Notifications',
+  'dashboards.passenger_profile': 'Profile & Settings',
+  'dashboards.porter_jobs': 'Assigned Jobs',
+  'dashboards.porter_verification': 'Verification',
+  'dashboards.porter_requests': 'Booking Requests',
+  'dashboards.porter_active_job': 'Active Job',
+  'dashboards.porter_earnings': 'Earnings',
+  'dashboards.porter_history': 'Job History',
+  'dashboards.porter_reviews': 'Ratings & Reviews',
+  'dashboards.porter_notifications': 'Notifications',
+  'dashboards.porter_profile': 'Profile & Settings',
+  'public.support': 'Support',
+  'payments.checkout': 'Complete Payment',
+  'payments.start_checkout': 'Complete Payment'
+} %}
+<body class="{{ 'auth-page' if request.endpoint in ['auth.login', 'auth.register'] else '' }}{{ ' redesigned-landing' if request.endpoint == 'public.home' else '' }}{{ ' journey-page' if request.endpoint == 'public.journey' else '' }}{{ ' dashboard-page' if request.endpoint == 'dashboards.index' else '' }}{{ ' passenger-portal-page' if workspace_portal and current_user.role == 'passenger' else '' }}{{ ' porter-portal-page' if workspace_portal and current_user.role == 'porter' else '' }}{{ ' admin-portal-page' if workspace_portal and current_user.role == 'admin' else '' }}">
+  {% if workspace_portal %}
+  <div class="passenger-portal">
+    <aside class="passenger-sidebar" aria-label="{{ 'Administrator' if current_user.role == 'admin' else 'Porter' if current_user.role == 'porter' else 'Passenger' }} workspace">
+      <a class="passenger-portal-brand" href="{{ url_for('dashboards.index') }}" aria-label="Rail Sathi dashboard">
+        <span class="passenger-brand-logo-wrap"><img class="passenger-brand-logo" src="{{ url_for('static', filename='images/rail-sathi-logo.png', v='logo-20261022-2') }}" alt="Rail Sathi"></span>
+        <span class="passenger-brand-copy"><small>{{ 'ADMINISTRATOR PORTAL' if current_user.role == 'admin' else 'PORTER PORTAL' if current_user.role == 'porter' else 'PASSENGER PORTAL' }}</small></span>
+      </a>
+      <p class="passenger-nav-label">WORKSPACE</p>
+      <nav class="passenger-nav" aria-label="{{ 'Administrator' if current_user.role == 'admin' else 'Porter' if current_user.role == 'porter' else 'Passenger' }} navigation">
+        {% if current_user.role == 'admin' %}
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.index' else '' }}" href="{{ url_for('dashboards.index') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5m0 14h16M8 15v-3m4 3V7m4 8V9m4 6V4"/></svg><span>Dashboard</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.admin_passengers' else '' }}" href="{{ url_for('dashboards.admin_passengers') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 5.5a3.5 3.5 0 0 1 0 6.8M17 15a5.5 5.5 0 0 1 4.5 5"/></svg><span>Passengers</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.admin_porters' else '' }}" href="{{ url_for('dashboards.admin_porters') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0m2-11 2 2 4-4"/></svg><span>Porters &amp; Verification</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.admin_bookings' else '' }}" href="{{ url_for('dashboards.admin_bookings') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM4 10h16m-11 4h3"/></svg><span>Bookings</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.admin_stations' else '' }}" href="{{ url_for('dashboards.admin_stations') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="8" width="8" height="12" rx="1"/><path d="M6 8h2m-2 4h2m8 0h2m-2 4h2"/></svg><span>Stations &amp; Services</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.admin_pricing' else '' }}" href="{{ url_for('dashboards.admin_pricing') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 5 5 19M7 7h.01M17 17h.01"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></svg><span>Pricing &amp; Commission</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.admin_payments' else '' }}" href="{{ url_for('dashboards.admin_payments') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18m-13 5h4"/></svg><span>Payments &amp; Refunds</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.admin_support' else '' }}" href="{{ url_for('dashboards.admin_support') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="12" width="5" height="8" rx="2"/><rect x="16" y="12" width="5" height="8" rx="2"/><path d="M16 20c-.5 1-1.5 1-4 1"/></svg><span>Support Tickets</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.admin_reports' else '' }}" href="{{ url_for('dashboards.admin_reports') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V4m0 16h16M8 16v-4m4 4V7m4 9v-6m4 6V3"/></svg><span>Reports &amp; Analytics</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.admin_notifications' else '' }}" href="{{ url_for('dashboards.admin_notifications') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/></svg><span>Notifications{% if admin_unread_notification_count %}<i class="passenger-nav-count">{{ '99+' if admin_unread_notification_count > 99 else admin_unread_notification_count }}</i>{% endif %}</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.admin_settings' else '' }}" href="{{ url_for('dashboards.admin_settings') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1a2 2 0 1 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4v.3a2 2 0 1 1-4 0v-.2a2 2 0 0 0-3.4-1.4l-.1.1A2 2 0 1 1 3 15.2l.1-.1A2 2 0 0 0 1.7 12h-.2a2 2 0 1 1 0-4h.2a2 2 0 0 0 1.4-3.4L3 4.5a2 2 0 1 1 2.8-2.8l.1.1a2 2 0 0 0 3.4-1.4V.2a2 2 0 1 1 4 0v.2a2 2 0 0 0 3.4 1.4l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a2 2 0 0 0 1.4 3.4h.2a2 2 0 1 1 0 4h-.2a2 2 0 0 0-1.4 3.4Z" transform="translate(1 1) scale(.92)"/></svg><span>Admin Settings</span></a>
+        {% elif current_user.role == 'passenger' %}
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.index' else '' }}" href="{{ url_for('dashboards.index') }}" {% if request.endpoint == 'dashboards.index' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="5" rx="1.5"/><rect x="13" y="11" width="7" height="9" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/></svg><span>Dashboard</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'bookings.new' else '' }}" href="{{ url_for('bookings.new') }}" {% if request.endpoint == 'bookings.new' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10l2 3v12l-2 3H7l-2-3V6l2-3Z"/><path d="M8 7h8v6H8zM8 17h.01M16 17h.01M9 21l-2 2m8-2 2 2"/></svg><span>Book a Porter</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.passenger_bookings' else '' }}" href="{{ url_for('dashboards.passenger_bookings') }}" {% if request.endpoint == 'dashboards.passenger_bookings' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="M4 10h16m-11 4h3"/></svg><span>My Bookings</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.passenger_payments' else '' }}" href="{{ url_for('dashboards.passenger_payments') }}" {% if request.endpoint == 'dashboards.passenger_payments' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18m-13 5h4"/></svg><span>Payments &amp; Receipts</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.passenger_notifications' else '' }}" href="{{ url_for('dashboards.passenger_notifications') }}" {% if request.endpoint == 'dashboards.passenger_notifications' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/></svg><span>Notifications</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'public.support' else '' }}" href="{{ url_for('public.support') }}" {% if request.endpoint == 'public.support' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="12" width="5" height="8" rx="2"/><rect x="16" y="12" width="5" height="8" rx="2"/><path d="M16 20c-.5 1-1.5 1-4 1"/></svg><span>Support</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.passenger_profile' else '' }}" href="{{ url_for('dashboards.passenger_profile') }}" {% if request.endpoint == 'dashboards.passenger_profile' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0M19 4l1 2 2 .5-2 1.5v2l-2-1-2 1V8l-2-1.5 2-.5 1-2Z"/></svg><span>Profile &amp; Settings</span></a>
+        {% else %}
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.index' else '' }}" href="{{ url_for('dashboards.index') }}" {% if request.endpoint == 'dashboards.index' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="5" rx="1.5"/><rect x="13" y="11" width="7" height="9" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/></svg><span>Dashboard</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.porter_verification' else '' }}" href="{{ url_for('dashboards.porter_verification') }}" {% if request.endpoint == 'dashboards.porter_verification' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 6v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6l8-3Z"/><path d="m9 12 2 2 4-4"/></svg><span>Verification</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.porter_requests' else '' }}" href="{{ url_for('dashboards.porter_requests') }}" {% if request.endpoint == 'dashboards.porter_requests' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8m-8 4h5m-5 3h8"/></svg><span>Booking Requests</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.porter_active_job' else '' }}" href="{{ url_for('dashboards.porter_active_job') }}" {% if request.endpoint == 'dashboards.porter_active_job' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 16-8L4 4l3 8-3 8Z"/><path d="M7 12h13"/></svg><span>Active Job</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.porter_earnings' else '' }}" href="{{ url_for('dashboards.porter_earnings') }}" {% if request.endpoint == 'dashboards.porter_earnings' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18m-13 5h3"/></svg><span>Earnings</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.porter_history' else '' }}" href="{{ url_for('dashboards.porter_history') }}" {% if request.endpoint == 'dashboards.porter_history' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5m4-1v5l3 2"/></svg><span>Job History</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.porter_reviews' else '' }}" href="{{ url_for('dashboards.porter_reviews') }}" {% if request.endpoint == 'dashboards.porter_reviews' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></svg><span>Ratings &amp; Reviews</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.porter_notifications' else '' }}" href="{{ url_for('dashboards.porter_notifications') }}" {% if request.endpoint == 'dashboards.porter_notifications' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/></svg><span>Notifications{% if porter_unread_notification_count %}<i class="passenger-nav-count">{{ '99+' if porter_unread_notification_count > 99 else porter_unread_notification_count }}</i>{% endif %}</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'public.support' else '' }}" href="{{ url_for('public.support') }}" {% if request.endpoint == 'public.support' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="12" width="5" height="8" rx="2"/><rect x="16" y="12" width="5" height="8" rx="2"/><path d="M16 20c-.5 1-1.5 1-4 1"/></svg><span>Support</span></a>
+        <a class="{{ 'is-current' if request.endpoint == 'dashboards.porter_profile' else '' }}" href="{{ url_for('dashboards.porter_profile') }}" {% if request.endpoint == 'dashboards.porter_profile' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg><span>Profile &amp; Settings</span></a>
+        {% endif %}
+      </nav>
+      <div class="passenger-sidebar-bottom">
+        <form method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5m5 5H3m9-9h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7"/></svg><span>Sign out</span></button></form>
+        <small>DEMO WORKSPACE · V1.0</small>
+      </div>
+    </aside>
+    <div class="passenger-portal-main">
+      {% set portal_unread_count = admin_unread_notification_count if current_user.role == 'admin' else porter_unread_notification_count if current_user.role == 'porter' else passenger_unread_notification_count %}
+      {% set portal_notifications_url = url_for('dashboards.admin_notifications') if current_user.role == 'admin' else url_for('dashboards.porter_notifications') if current_user.role == 'porter' else url_for('dashboards.passenger_notifications') %}
+      {% set portal_profile_url = url_for('dashboards.admin_settings') if current_user.role == 'admin' else url_for('dashboards.porter_profile') if current_user.role == 'porter' else url_for('dashboards.passenger_profile') %}
+      <header class="passenger-topbar">
+        <div class="passenger-topbar-title"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="5" rx="1.5"/><rect x="13" y="11" width="7" height="9" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/></svg><span>{{ 'Dashboard' if current_user.role in ['porter', 'admin'] else portal_page_titles.get(request.endpoint, 'Rail Sathi') }}</span></div>
+        <span class="passenger-portal-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 6v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg>SIMULATED DEMO</span>
+        <div class="passenger-topbar-actions">
+          <button class="passenger-icon-button" type="button" data-theme-toggle aria-pressed="false" aria-label="Switch to dark mode" title="Toggle dark mode"><span class="theme-toggle-icon" data-theme-icon aria-hidden="true">☾</span></button>
+          <a class="passenger-icon-button passenger-notice-button" href="{{ portal_notifications_url }}" aria-label="{% if portal_unread_count %}{{ portal_unread_count }} unread notifications{% else %}View notifications{% endif %}" title="{% if portal_unread_count %}{{ portal_unread_count }} unread notifications{% else %}View notifications{% endif %}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/></svg>{% if portal_unread_count %}<span class="passenger-notice-count" aria-hidden="true">{{ '99+' if portal_unread_count > 99 else portal_unread_count }}</span>{% endif %}</a>
+          <a class="passenger-user-chip" href="{{ portal_profile_url }}"><span class="passenger-user-avatar">{{ current_user.name[:2]|upper }}</span><span class="passenger-user-details"><strong>{{ current_user.name }}</strong><small>{{ 'Administrator' if current_user.role == 'admin' else 'Porter' if current_user.role == 'porter' else 'Passenger' }}</small></span><span class="passenger-user-chevron" aria-hidden="true">⌄</span></a>
+        </div>
+      </header>
+  {% else %}
+  {% if request.endpoint not in ['auth.login', 'auth.register', 'public.journey'] %}
+  <header class="topbar {{ 'menu-only' if current_user.is_authenticated and request.endpoint != 'public.home' else '' }}">
+    <a class="brand" href="{{ url_for('public.home') }}" aria-label="Rail Sathi home">
+      <img class="brand-image" src="{{ url_for('static', filename='images/rail-sathi-logo.png', v='logo-20261015-1') }}" alt="Rail Sathi">
+    </a>
+    {% if request.endpoint == 'public.home' or not current_user.is_authenticated %}
+    <nav id="main-navigation" aria-label="Main navigation">
+      <a href="{{ url_for('public.home') }}#home">Home</a>
+      <a href="{{ url_for('public.journey') }}">Experience</a>
+      <a href="{{ url_for('public.home') }}#how-it-works">How It Works</a>
+      <a href="{{ url_for('public.home') }}#stations">Stations</a>
+      <a href="{{ url_for('public.support') }}">Support</a>
+    </nav>
+    <div class="nav-actions">
+      {% if request.endpoint == 'public.home' %}
+      <button class="landing-theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Switch to dark mode" title="Toggle dark mode">
+        <span data-theme-icon aria-hidden="true">☾</span><span data-theme-label>Dark mode</span>
+      </button>
+      {% endif %}
+      {% if current_user.is_authenticated %}
+      <a class="quiet-link" href="{{ url_for('dashboards.index') }}">Dashboard</a>
+      <form method="post" action="{{ url_for('auth.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="text-button" type="submit">Log out</button>
+      </form>
+      {% else %}
+      <a class="button button-small" href="{{ url_for('auth.login') }}">Log in</a>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% if request.endpoint != 'public.home' %}
+    <div class="site-menu-wrap">
+      <button class="site-menu-toggle" id="site-menu-toggle" type="button" aria-label="Open website menu" aria-controls="site-menu" aria-expanded="false">
+        <span class="hamburger-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+      </button>
+      <nav class="site-menu" id="site-menu" aria-label="Website menu" hidden>
+        {% if current_user.is_authenticated %}
+        <p class="site-menu-heading">{{ current_user.role|title }} menu</p>
+        <a href="{{ url_for('dashboards.index') }}#dashboard">Dashboard</a>
+        <a href="{{ url_for('dashboards.index') }}#profile">My profile</a>
+        {% if current_user.role == 'passenger' %}
+        <a href="{{ url_for('dashboards.index') }}#bookings">My bookings</a>
+        <a href="{{ url_for('bookings.new') }}">New booking</a>
+        <a href="{{ url_for('public.support') }}">Get help</a>
+        {% elif current_user.role == 'porter' %}
+        <a href="{{ url_for('dashboards.index') }}#bookings">My assigned jobs</a>
+        {% if current_user.porter_status != 'verified' %}<a href="{{ url_for('dashboards.index') }}#porter-application">Application details</a>{% endif %}
+        <a href="{{ url_for('public.support') }}">Get help</a>
+        {% elif current_user.role == 'admin' %}
+        <a href="{{ url_for('dashboards.index') }}#porter-review">Porter applications</a>
+        <a href="{{ url_for('dashboards.index') }}#bookings">Station requests</a>
+        <a href="{{ url_for('dashboards.index') }}#support-inbox">Support inbox</a>
+        <a href="{{ url_for('dashboards.index') }}#station-settings">Stations and services</a>
+        {% if current_user.is_main_admin %}<a href="{{ url_for('dashboards.index') }}#admin-management">Manage admins</a>{% endif %}
+        {% endif %}
+        <form method="post" action="{{ url_for('auth.logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="site-menu-link" type="submit">Log out</button>
+        </form>
+        {% else %}
+        <p class="site-menu-heading">Explore Rail Sathi</p>
+        <a href="{{ url_for('public.journey') }}">Experience the journey</a>
+        <a href="{{ url_for('public.support') }}">Support and help</a>
+        <a href="{{ url_for('auth.login') }}">Log in</a>
+        {% endif %}
+        <div class="site-menu-divider"></div>
+        <button class="theme-toggle" id="theme-toggle" data-theme-toggle type="button" aria-pressed="false">
+          <span class="theme-toggle-icon" data-theme-icon aria-hidden="true">☾</span>
+          <span id="theme-toggle-label" data-theme-label>Dark mode</span>
+        </button>
+      </nav>
+    </div>
+    {% endif %}
+  </header>
+  {% endif %}
+  {% endif %}
+
+  <main class="{{ 'passenger-page-main' if workspace_portal else '' }}">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="flash-stack" role="status" aria-live="polite">
+        {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  {% if workspace_portal %}
+  </div>
+  </div>
+  {% else %}
+  {% if request.endpoint not in ['auth.login', 'auth.register', 'public.home', 'public.journey'] %}
+  <footer>
+    <div>
+      <a class="brand footer-brand" href="{{ url_for('public.home') }}">
+        <img class="brand-image" src="{{ url_for('static', filename='images/rail-sathi-logo.png', v='logo-20261015-1') }}" alt="Rail Sathi">
+      </a>
+      <p>Station assistance requests, made simpler to manage.</p>
+    </div>
+    <div>
+      <strong>Need help?</strong>
+      <p><a href="{{ url_for('public.support') }}">Send a support request</a></p>
+    </div>
+    <small>© 2026 Rail Sathi</small>
+  </footer>
+  {% endif %}
+  {% endif %}
+
+  <script src="{{ url_for('static', filename='js/app.js', v='passenger-dashboard-20261015-1') }}" defer></script>
+  {% if request.endpoint == 'public.journey' %}
+  <script src="{{ url_for('static', filename='js/journey.js', v='rail-sathi-journey-20261015-7') }}" defer></script>
+  {% endif %}
+  {% if request.endpoint == 'bookings.new' %}
+  <script src="{{ url_for('static', filename='js/pickup-location.js', v='pickup-location-v1') }}" defer></script>
+  {% endif %}
+  {% if current_user.is_authenticated and ((current_user.role == 'passenger' and request.endpoint in ['dashboards.index', 'dashboards.passenger_bookings']) or (current_user.role == 'porter' and request.endpoint in ['dashboards.index', 'dashboards.porter_active_job', 'dashboards.porter_jobs', 'dashboards.porter_requests'])) %}
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" defer></script>
+  <script src="{{ url_for('static', filename='js/tracking.js', v='automatic-live-tracking-v4') }}" defer></script>
+  {% endif %}
+</body>
+</html>

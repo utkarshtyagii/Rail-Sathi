@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}Book assistance — Rail Sathi{% endblock %}
+
+{% block content %}
+<section class="auth-wrap booking-wrap">
+  <div class="booking-form">
+    <div class="booking-intro">
+      <div class="eyebrow">PLAN YOUR ASSISTANCE</div>
+      <h1>Tell us about your journey.</h1>
+      <p>Share a few details so we can prepare your porter request. You’ll see an estimated fare before you send it.</p>
+    </div>
+
+    <form method="post" class="form-stack booking-form-stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <section class="booking-step" aria-labelledby="journey-heading">
+        <div class="step-heading">
+          <span class="step-number">1</span>
+          <div>
+            <h2 id="journey-heading">Journey and service</h2>
+            <p>Choose the station and the kind of help you need.</p>
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="station">Station
+            <select name="station" id="station" required>
+              <option value="">Select station</option>
+              {% for station in stations %}
+              <option value="{{ station.id }}" {% if selected_station == station.id %}selected{% endif %}>{{ station.name }} ({{ station.code }})</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label for="service">Assistance service
+            <select name="service" id="service" required>
+              <option value="">Select service</option>
+              {% for service in services if selected_station == service.station_id %}
+              <option value="{{ service.id }}" data-station="{{ service.station_id }}" data-fare="{{ service.base_fare }}" {% if selected_service == service.id %}selected{% endif %}>{{ service.name }} — {{ service.base_fare|inr }} base</option>
+              {% endfor %}
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="booking-step" aria-labelledby="meeting-heading">
+        <div class="step-heading">
+          <span class="step-number">2</span>
+          <div>
+            <h2 id="meeting-heading">Time and meeting points</h2>
+            <p>Tell the porter when and where to meet you.</p>
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="service-date">Service date
+            <input id="service-date" name="service_date" type="date" required>
+          </label>
+          <label for="service-time">Service time
+            <input id="service-time" name="service_time" type="time" required>
+          </label>
+        </div>
+        <div class="form-row">
+          <label for="pickup">Pickup point
+            <input id="pickup" name="pickup" placeholder="For example, Platform 4, coach B2" required maxlength="180">
+          </label>
+          <label for="destination">Destination
+            <input id="destination" name="destination" placeholder="For example, station main entrance" required maxlength="180">
+          </label>
+        </div>
+        <div class="pickup-location-control" data-pickup-location>
+          <input type="hidden" name="pickup_latitude" data-pickup-latitude>
+          <input type="hidden" name="pickup_longitude" data-pickup-longitude>
+          <button class="passenger-inline-button" type="button" data-pickup-use-location>Use my current location for the map pin</button>
+          <button class="passenger-panel-link" type="button" data-pickup-clear-location hidden>Remove map pin</button>
+          <p data-pickup-location-status aria-live="polite">Optional. Your pickup pin is saved with this booking only if you choose to share it.</p>
+        </div>
+        <div class="pickup-location-control" data-destination-location>
+          <input type="hidden" name="destination_latitude" data-destination-latitude>
+          <input type="hidden" name="destination_longitude" data-destination-longitude>
+          <button class="passenger-inline-button" type="button" data-destination-use-location>Use my current location for the destination pin</button>
+          <button class="passenger-panel-link" type="button" data-destination-clear-location hidden>Remove map pin</button>
+          <p data-destination-location-status aria-live="polite">Optional. This saves the device's current location as the destination pin; it does not look up the typed destination.</p>
+        </div>
+        <label for="passenger-phone">Your contact number
+          <input id="passenger-phone" name="passenger_phone" type="tel" autocomplete="tel" value="{{ current_user.phone or '' }}" placeholder="Include your country code" required maxlength="30">
+          <small>This number is shared with the assigned porter and station support so they can coordinate your meeting.</small>
+        </label>
+      </section>
+
+      <section class="booking-step" aria-labelledby="train-heading">
+        <div class="step-heading">
+          <span class="step-number">3</span>
+          <div>
+            <h2 id="train-heading">Train and luggage <span class="optional-label">Optional details</span></h2>
+            <p>These details can help the porter find you more easily.</p>
+          </div>
+        </div>
+        <div class="form-row three">
+          <label for="bags">Number of bags
+            <input id="bags" name="bags" type="number" min="1" max="20" value="1" required>
+          </label>
+          <label for="train-number">Train number
+            <input id="train-number" name="train_number" placeholder="e.g. 12002" maxlength="20">
+          </label>
+          <label for="platform">Platform
+            <input id="platform" name="platform" placeholder="e.g. 4" maxlength="20">
+          </label>
+        </div>
+        <div class="form-row three">
+          <label for="coach">Coach
+            <input id="coach" name="coach" placeholder="e.g. B2" maxlength="20">
+          </label>
+          <label for="berth">Seat or berth
+            <input id="berth" name="berth" placeholder="e.g. 36" maxlength="20">
+          </label>
+          <label for="instructions">Extra instructions
+            <input id="instructions" name="instructions" placeholder="Anything else we should know?" maxlength="500">
+          </label>
+        </div>
+      </section>
+
+      <section class="booking-summary" aria-label="Fare estimate">
+        <div class="fare-box">
+          <div>
+            <strong>Estimated fare</strong>
+          <span>Base fare plus ₹35 for each bag after the first. Pay after the service is completed.</span>
+          </div>
+          <strong id="fare" aria-live="polite">Choose a service</strong>
+        </div>
+        <p class="fine-print">No charge is made when you request a porter. The final fare is due after the service is marked complete.</p>
+      </section>
+
+      <button class="button full booking-submit">Send porter request <span aria-hidden="true">→</span></button>
+      <p class="booking-footnote">You can review your request in your dashboard after submitting.</p>
+    </form>
+  </div>
+</section>
+<template id="booking-service-options">
+  {% for service in services %}
+  <option value="{{ service.id }}" data-station="{{ service.station_id }}" data-fare="{{ service.base_fare }}">{{ service.name }} — {{ service.base_fare|inr }} base</option>
+  {% endfor %}
+</template>
+{% endblock %}

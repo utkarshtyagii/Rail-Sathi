@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Complete payment — Rail Sathi{% endblock %}
+
+{% block content %}
+<section class="checkout-page wrap">
+  <article class="checkout-card">
+    <div class="eyebrow">BOOKING {{ attempt.booking.public_id }}</div>
+    <h1>Complete your payment</h1>
+    <p>Your porter has marked this service complete. Review the amount, then continue to Razorpay's secure checkout.</p>
+    <div class="checkout-summary">
+      <span>{{ attempt.booking.service.name }} · {{ attempt.booking.station.name }}</span>
+      <strong>{{ attempt.booking.estimated_fare|inr }}</strong>
+    </div>
+    <p class="checkout-assurance">Rail Sathi only records payment after verifying the payment provider's confirmation.</p>
+    <button class="button" id="open-checkout" type="button">Continue to payment</button>
+    <p id="checkout-message" class="payment-note" role="status" aria-live="polite"></p>
+    <a class="quiet-link" href="{{ url_for('dashboards.index') }}">Return to dashboard</a>
+    <input id="csrf-token" type="hidden" value="{{ csrf_token() }}">
+  </article>
+</section>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+  const openCheckout = document.querySelector('#open-checkout');
+  const checkoutMessage = document.querySelector('#checkout-message');
+  const csrfToken = document.querySelector('#csrf-token').value;
+  openCheckout.addEventListener('click', () => {
+    if (typeof Razorpay === 'undefined') {
+      checkoutMessage.textContent = 'Secure checkout could not load. Check your connection and try again.';
+      return;
+    }
+    const checkout = new Razorpay({
+      key: {{ key_id|tojson }},
+      amount: {{ attempt.amount_paise }},
+      currency: {{ attempt.currency|tojson }},
+      name: 'Rail Sathi',
+      description: {{ ('Booking ' ~ attempt.booking.public_id)|tojson }},
+      order_id: {{ attempt.provider_order_id|tojson }},
+      prefill: {
+        name: {{ current_user.name|tojson }},
+        email: {{ current_user.email|tojson }},
+        contact: {{ (attempt.booking.passenger_phone or current_user.phone or '')|tojson }}
+      },
+      theme: { color: '#ef343a' },
+      handler: async (response) => {
+        openCheckout.disabled = true;
+        checkoutMessage.textContent = 'Verifying your payment with Razorpay…';
+        try {
+          const result = await fetch({{ url_for('payments.verify_checkout', attempt_id=attempt.id)|tojson }}, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify(response)
+          });
+          const confirmation = await result.json();
+          checkoutMessage.textContent = confirmation.message || 'We could not confirm this payment. Please return to your dashboard.';
+          if (confirmation.ok) {
+            window.location.assign({{ url_for('dashboards.index')|tojson }});
+          } else {
+            openCheckout.disabled = false;
+          }
+        } catch (_error) {
+          checkoutMessage.textContent = 'We could not reach the server to confirm this payment. Check your dashboard in a moment.';
+          openCheckout.disabled = false;
+        }
+      },
+      modal: {
+        ondismiss: () => {
+          checkoutMessage.textContent = 'Checkout was closed. You can continue payment from your dashboard.';
+        }
+      }
+    });
+    checkout.open();
+  });
+</script>
+{% endblock %}

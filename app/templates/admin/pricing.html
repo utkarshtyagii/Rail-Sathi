@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% from 'admin/_components.html' import heading, notice %}
+{% block title %}Pricing & commission · Rail Sathi admin{% endblock %}
+{% block content %}
+<div class="admin-content">
+  {{ heading('Pricing & commission', 'Manage the live base fare for each service. Expand a service to adjust station-specific prices.', 'FARE CONFIGURATION') }}
+  {{ notice('Current fares are illustrative prototype prices. Commission, extra-bag charges, and refund rules are not configured in the application and are not shown as editable settings.') }}
+  <div class="admin-pricing-grid">
+    <section class="admin-panel">
+      <div class="admin-panel-heading">
+        <div>
+          <h2>Service fares</h2>
+          <p>{{ service_count }} unique service types · changes affect estimates for new booking requests.</p>
+        </div>
+      </div>
+      <div class="admin-service-pricing">
+        {% for group in service_groups %}
+          <details class="admin-service-group">
+            <summary class="admin-service-group-summary">
+              <span class="admin-service-group-name">{{ group.name }}</span>
+              <span class="admin-service-group-coverage">{{ group.station_count }} stations · {{ group.active_station_count }} available</span>
+              <span class="admin-service-group-action">Manage station fares</span>
+            </summary>
+            <div class="admin-service-station-list">
+              {% for service in group.services %}
+                <form class="admin-service-row" method="post" action="{{ url_for('admin.update_service', service_id=service.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <div class="admin-service-name">
+                    <strong>{{ service.station.name }} <span>({{ service.station.code }})</span></strong>
+                    <small>{{ service.description or 'Station assistance' }}</small>
+                  </div>
+                  <label>Base fare (₹)<input name="base_fare" type="number" min="1" max="100000" step="0.01" value="{{ '%.2f'|format(service.base_fare) }}" required></label>
+                  <label>Availability<select name="active"><option value="1" {{ 'selected' if service.active }}>Available</option><option value="0" {{ 'selected' if not service.active }}>Unavailable</option></select></label>
+                  <button class="admin-button" type="submit">Save</button>
+                </form>
+              {% endfor %}
+            </div>
+          </details>
+        {% else %}
+          <p class="admin-empty">No services are configured.</p>
+        {% endfor %}
+      </div>
+    </section>
+    <aside class="admin-panel admin-fare-note">
+      <span class="admin-eyebrow">HOW ESTIMATES WORK</span>
+      <h2>Booking estimate</h2>
+      <p>The current booking flow uses the selected service base fare, plus ₹35 for each bag after the first.</p>
+      <div><span>Service base fare</span><strong>Set per service and station</strong></div>
+      <div><span>Additional bag</span><strong>₹35 · current rule</strong></div>
+      <small>This calculation describes current application logic. It is not a railway tariff or a payment settlement breakdown.</small>
+    </aside>
+  </div>
+</div>
+{% endblock %}

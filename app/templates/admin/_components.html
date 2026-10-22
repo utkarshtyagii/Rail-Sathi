@@ -1,0 +1,18 @@
+{% macro heading(title, copy, eyebrow='', action_url='', action_label='') %}
+<div class="admin-page-heading">
+  <div>{% if eyebrow %}<span class="admin-eyebrow">{{ eyebrow }}</span>{% endif %}<h1>{{ title }}</h1><p>{{ copy }}</p></div>
+  {% if action_url %}<a class="admin-button admin-button-primary" href="{{ action_url }}">{{ action_label }} <span aria-hidden="true">→</span></a>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro metric(label, value, note, tone='') %}
+<article class="admin-metric"><div><span>{{ label }}</span><strong>{{ value }}</strong><small>{{ note }}</small></div><span class="admin-metric-mark {{ tone }}" aria-hidden="true">{{ '✓' if tone == 'green' else '!' if tone == 'red' else '↗' }}</span></article>
+{% endmacro %}
+
+{% macro status(value) %}
+<span class="admin-status admin-status-{{ value|lower|replace('_','-') }}">{{ value|replace('_',' ')|title }}</span>
+{% endmacro %}
+
+{% macro notice(copy) %}
+<div class="admin-notice"><span aria-hidden="true">i</span>{{ copy }}</div>
+{% endmacro %}

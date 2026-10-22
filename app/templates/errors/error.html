@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ code }} — Rail Sathi{% endblock %}
+
+{% block content %}
+<section class="error-page wrap">
+  <div class="error-card">
+    <span class="error-code">{{ code }}</span>
+    <div class="eyebrow">RAIL SATHI</div>
+    <h1>{{ title }}</h1>
+    <p>{{ description }}</p>
+    <div class="error-actions">
+      <a class="button" href="{{ url_for('dashboards.index') if current_user.is_authenticated else url_for('auth.login') }}">
+        {{ 'Go to dashboard' if current_user.is_authenticated else 'Log in' }}
+      </a>
+      <a class="arrow-link" href="{{ url_for('public.home') }}">Return to home</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile & settings — Rail Sathi{% endblock %}
+
+{% block content %}
+<div class="passenger-page-content">
+  <header class="passenger-page-heading"><div><h1>Profile &amp; settings</h1><p>Manage the contact details on your passenger account.</p></div></header>
+  <div class="passenger-profile-layout">
+    <section class="passenger-panel passenger-profile-summary">
+      <span class="passenger-user-avatar">{{ current_user.name[:2]|upper }}</span>
+      <h2>{{ current_user.name }}</h2>
+      <p>Passenger account</p>
+      <span class="passenger-profile-email">{{ current_user.email }}</span>
+      <small>Account created {{ (current_user.created_at|india_utc).strftime('%B %Y') }}</small>
+    </section>
+    <section class="passenger-panel passenger-profile-form-panel">
+      <h2>Personal information</h2>
+      <form method="post" class="form-stack passenger-profile-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-row">
+          <label for="profile-name">Full name
+            <input id="profile-name" name="name" autocomplete="name" maxlength="120" value="{{ current_user.name }}" required>
+          </label>
+          <label for="profile-phone">Mobile
+            <input id="profile-phone" name="phone" type="tel" autocomplete="tel" maxlength="30" value="{{ current_user.phone or '' }}" placeholder="Add a phone number">
+          </label>
+        </div>
+        <label for="profile-email">Email address
+          <input id="profile-email" type="email" value="{{ current_user.email }}" readonly aria-describedby="email-help">
+          <small id="email-help">Email address changes are not available here.</small>
+        </label>
+        <button class="passenger-primary-button" type="submit">Save changes</button>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}
